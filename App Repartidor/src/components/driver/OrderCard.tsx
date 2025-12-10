@@ -4,7 +4,7 @@ import { MapPin, Navigation, DollarSign, Clock, Trash2, Package, AlertCircle } f
 import { getStatusColor, getStatusIcon } from '../../utils/statusUtils';
 import { useCurrentTime, formatRelativeTime } from '../../utils/dateUtils';
 import { formatPrice } from '../../utils/priceUtils';
-import './OrderCard.css';
+import '../../styles/Components/driver/OrderCard.css';
 
 interface OrderCardProps {
 	order: Order;

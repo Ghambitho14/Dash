@@ -5,7 +5,7 @@ import { getStatusIcon, getNextStatus } from '../../utils/statusUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { formatPrice } from '../../utils/priceUtils';
 import { PickupCodeModal } from './PickupCodeModal';
-import './OrderDetail.css';
+import '../../styles/Components/driver/OrderDetail.css';
 
 interface OrderDetailProps {
 	order: Order;

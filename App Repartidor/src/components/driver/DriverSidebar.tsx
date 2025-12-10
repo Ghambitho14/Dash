@@ -1,5 +1,5 @@
 import { X, User, Wallet, Package, Settings } from 'lucide-react';
-import './DriverSidebar.css';
+import '../../styles/Components/driver/DriverSidebar.css';
 
 interface DriverSidebarProps {
 	isOpen: boolean;

@@ -4,14 +4,16 @@ import { User } from '../types/user';
 import { Client } from '../types/client';
 import { CreateOrderForm } from './CreateOrderForm';
 import { ClientManagement } from './ClientManagement';
+import { UserManagement } from './UserManagement';
 import { OrderList } from './OrderList';
 import { OrderDetail } from './company/OrderDetail';
 import { LocalSettings } from './LocalSettings';
 import { LocalConfig } from '../utils/localConfig';
 import { Modal } from './common/Modal';
 import { generatePickupCode } from '../utils/codeUtils';
-import { Plus, Package, Building2, Store, ChevronDown, Settings, Menu, X, Users } from 'lucide-react';
-import './CompanyPanel.css';
+import { isAdminOrEmpresarial, getRoleName } from '../utils/roleUtils';
+import { Plus, Package, Building2, Store, ChevronDown, Settings, Menu, X, Users, UserCog } from 'lucide-react';
+import '../styles/Components/CompanyPanel.css';
 
 interface CompanyPanelProps {
 	currentUser: User;
@@ -23,12 +25,17 @@ interface CompanyPanelProps {
 	onCreateClient: (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
 	onUpdateClient: (clientId: string, clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
 	onDeleteClient: (clientId: string) => void;
+	users: User[];
+	onCreateUser: (userData: Omit<User, 'id'>) => void;
+	onUpdateUser: (userId: string, userData: Omit<User, 'id'>) => void;
+	onDeleteUser: (userId: string) => void;
 }
 
-export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, setLocalConfigs, clients, onCreateClient, onUpdateClient, onDeleteClient }: CompanyPanelProps) {
+export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, setLocalConfigs, clients, onCreateClient, onUpdateClient, onDeleteClient, users, onCreateUser, onUpdateUser, onDeleteUser }: CompanyPanelProps) {
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [showClientManagement, setShowClientManagement] = useState(false);
+	const [showUserManagement, setShowUserManagement] = useState(false);
 	const [showLocalSettings, setShowLocalSettings] = useState(false);
 	const [activeTab, setActiveTab] = useState<'all' | 'active' | 'completed'>('all');
 	const [selectedLocal, setSelectedLocal] = useState<Local | 'Todos'>('Todos');
@@ -88,7 +95,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, set
       completed: (order: Order) => order.status === 'Entregado',
     };
 
-    const localFilter = currentUser.role === 'admin'
+    const localFilter = isAdminOrEmpresarial(currentUser.role)
       ? (order: Order) => selectedLocal === 'Todos' || order.local === selectedLocal
       : () => true;
 
@@ -121,7 +128,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, set
               <div className="company-sidebar-user-info">
                 <h3>{currentUser.name}</h3>
                 <p>
-                  {currentUser.role === 'admin' ? 'Administrador' : 'Local'}
+                  {getRoleName(currentUser.role)}
                 </p>
               </div>
             </div>
@@ -134,8 +141,8 @@ export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, set
             </button>
           </div>
           
-          {/* Local Selector Dropdown - Solo para admin */}
-          {currentUser.role === 'admin' && (
+          {/* Local Selector Dropdown - Solo para admin y empresarial */}
+          {isAdminOrEmpresarial(currentUser.role) && (
             <div className="company-dropdown">
               <button
                 onClick={() => setShowLocalDropdown(!showLocalDropdown)}
@@ -194,8 +201,19 @@ export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, set
             Configurar Clientes
           </button>
 
-          {/* Settings Button - Solo para admin */}
-          {currentUser.role === 'admin' && (
+          {/* User Management Button - Solo para admin y empresarial */}
+          {isAdminOrEmpresarial(currentUser.role) && (
+            <button
+              onClick={() => setShowUserManagement(true)}
+              className="company-button company-button-secondary"
+            >
+              <UserCog />
+              Gestionar Usuarios
+            </button>
+          )}
+
+          {/* Settings Button - Solo para admin y empresarial */}
+          {isAdminOrEmpresarial(currentUser.role) && (
             <button
               onClick={() => setShowLocalSettings(true)}
               className="company-button company-button-secondary"
@@ -329,6 +347,18 @@ export function CompanyPanel({ currentUser, orders, setOrders, localConfigs, set
         <Modal onClose={() => setSelectedOrder(null)} maxWidth="2xl">
           <OrderDetail order={selectedOrder} onClose={() => setSelectedOrder(null)} />
         </Modal>
+      )}
+
+      {showUserManagement && (
+        <UserManagement
+          users={users}
+          onCreateUser={onCreateUser}
+          onUpdateUser={onUpdateUser}
+          onDeleteUser={onDeleteUser}
+          onClose={() => setShowUserManagement(false)}
+          localConfigs={localConfigs}
+          currentUser={currentUser}
+        />
       )}
 
       {showLocalSettings && (

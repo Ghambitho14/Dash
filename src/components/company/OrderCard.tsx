@@ -3,7 +3,7 @@ import { MapPin, Navigation, DollarSign, User, Clock, Trash2, Package, Building2
 import { getStatusColor, getStatusIcon, formatStatusForCompany } from '../../utils/statusUtils';
 import { useCurrentTime, formatRelativeTime } from '../../utils/dateUtils';
 import { formatPrice } from '../../utils/priceUtils';
-import './OrderCard.css';
+import '../../styles/Components/company/OrderCard.css';
 
 interface OrderCardProps {
 	order: Order;

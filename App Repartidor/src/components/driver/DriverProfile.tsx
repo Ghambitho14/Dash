@@ -1,5 +1,5 @@
 import { User, Mail, Phone, MapPin } from 'lucide-react';
-import './DriverProfile.css';
+import '../../styles/Components/driver/DriverProfile.css';
 
 interface DriverProfileProps {
 	driverName: string;

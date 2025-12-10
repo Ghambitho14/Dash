@@ -1,6 +1,6 @@
 import { Order } from '../types/order';
 import { OrderCard as CompanyOrderCard } from './company/OrderCard';
-import './OrderList.css';
+import '../styles/Components/OrderList.css';
 
 interface OrderListProps {
 	orders: Order[];

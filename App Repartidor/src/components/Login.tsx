@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Driver, mockDrivers } from '../types/driver';
 import { Bike, Lock, User as UserIcon, LogIn } from 'lucide-react';
-import './Login.css';
+import '../styles/Components/Login.css';
 
 interface LoginProps {
 	onLogin: (driver: Driver) => void;

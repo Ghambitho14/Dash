@@ -4,7 +4,7 @@ import { Client } from '../types/client';
 import { Local } from '../types/order';
 import { LocalConfig } from '../utils/localConfig';
 import { User as UserType } from '../types/user';
-import './CreateClientForm.css';
+import '../styles/Components/CreateClientForm.css';
 
 interface CreateClientFormProps {
 	onSubmit: (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -25,7 +25,7 @@ export function CreateClientForm({ onSubmit, onClose, currentUser, localConfigs,
 		? [currentUser.local!]
 		: localConfigs.map(config => config.name as Local);
 	
-	const initialLocal = (isLocal ? currentUser.local! : (initialData?.local || localConfigs[0]?.name || 'Local 1')) as Local;
+	const initialLocal = (isLocal ? currentUser.local! : (initialData?.local || localConfigs[0]?.name || '')) as Local;
 
 	const [name, setName] = useState(initialData?.name || '');
 	const [phone, setPhone] = useState(initialData?.phone || '');

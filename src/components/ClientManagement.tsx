@@ -4,7 +4,7 @@ import { CreateClientForm } from './CreateClientForm';
 import type { User } from '../types/user';
 import { LocalConfig } from '../utils/localConfig';
 import { X, User as UserIcon, Plus, Edit2, Trash2, Phone, MapPin, Store } from 'lucide-react';
-import './ClientManagement.css';
+import '../styles/Components/ClientManagement.css';
 
 interface ClientManagementProps {
 	clients: Client[];

@@ -1,5 +1,5 @@
 import { Wallet, DollarSign, TrendingUp, Clock } from 'lucide-react';
-import './DriverWallet.css';
+import '../../styles/Components/driver/DriverWallet.css';
 
 export function DriverWallet() {
 	const totalEarnings = 125000;

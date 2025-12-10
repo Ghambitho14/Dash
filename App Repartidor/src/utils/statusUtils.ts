@@ -1,6 +1,6 @@
 import { OrderStatus } from '../types/order';
 import { Clock, CheckCircle, Truck, Package, CheckCircle2 } from 'lucide-react';
-import './statusUtils.css';
+import '../styles/utils/statusUtils.css';
 
 export function getStatusColor(status: OrderStatus): string {
   switch (status) {
@@ -47,15 +47,4 @@ export function getNextStatus(currentStatus: OrderStatus): OrderStatus | null {
     default:
       return null;
   }
-}
-
-/**
- * Formatea el estado del pedido para mostrarlo en la vista de la empresa
- * Cuando el estado es "Producto retirado", se muestra como "Producto retirado, en camino"
- */
-export function formatStatusForCompany(status: OrderStatus): string {
-  if (status === 'Producto retirado') {
-    return 'Producto retirado, en camino';
-  }
-  return status;
 }

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { User } from '../types/user';
 import { Building2, LogOut } from 'lucide-react';
-import './CompanyLayout.css';
+import '../styles/layouts/CompanyLayout.css';
 
 interface CompanyLayoutProps {
 	children: ReactNode;

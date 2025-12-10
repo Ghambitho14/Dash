@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Key, AlertCircle } from 'lucide-react';
 import { Modal } from '../common/Modal';
-import './PickupCodeModal.css';
+import '../../styles/Components/driver/PickupCodeModal.css';
 
 interface PickupCodeModalProps {
 	onClose: () => void;

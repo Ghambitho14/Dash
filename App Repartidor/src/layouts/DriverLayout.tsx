@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Menu, LogOut } from 'lucide-react';
 import { DriverSidebar } from '../components/driver/DriverSidebar';
-import './DriverLayout.css';
+import '../styles/layouts/DriverLayout.css';
 
 interface DriverLayoutProps {
 	children: ReactNode;

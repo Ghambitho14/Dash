@@ -3,7 +3,7 @@ import { X, MapPin, Navigation, DollarSign, User, Clock, Package, Building2, Key
 import { getStatusIcon, formatStatusForCompany } from '../../utils/statusUtils';
 import { formatDate } from '../../utils/dateUtils';
 import { formatPrice } from '../../utils/priceUtils';
-import './OrderDetail.css';
+import '../../styles/Components/company/OrderDetail.css';
 
 interface OrderDetailProps {
 	order: Order;

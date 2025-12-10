@@ -1,6 +1,6 @@
 import { Local } from './order';
 
-export type UserRole = 'admin' | 'local';
+export type UserRole = 'empresarial' | 'admin' | 'local';
 
 export interface User {
   id: string;
@@ -12,6 +12,13 @@ export interface User {
 }
 
 export const mockUsers: User[] = [
+  {
+    id: 'user-empresarial',
+    username: 'ceo',
+    password: 'ceo123',
+    role: 'empresarial',
+    name: 'CEO',
+  },
   {
     id: 'user-admin',
     username: 'admin',

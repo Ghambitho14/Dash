@@ -1,5 +1,5 @@
 import { Bell, Shield, Moon, Globe } from 'lucide-react';
-import './DriverSettings.css';
+import '../../styles/Components/driver/DriverSettings.css';
 
 export function DriverSettings() {
 	return (

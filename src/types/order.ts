@@ -5,7 +5,7 @@ export type OrderStatus =
   | 'Producto retirado'
   | 'Entregado';
 
-export type Local = 'Local 1' | 'Local 2' | 'Local 3' | 'Local 4' | 'Local 5';
+export type Local = string;
 
 export interface Order {
   id: string;

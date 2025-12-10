@@ -4,7 +4,7 @@ import { User } from '../types/user';
 import { Client } from '../types/client';
 import { LocalConfig, getLocalAddress } from '../utils/localConfig';
 import { X, MapPin, Navigation, DollarSign, FileText, Store, User as UserIcon } from 'lucide-react';
-import './CreateOrderForm.css';
+import '../styles/Components/CreateOrderForm.css';
 
 interface CreateOrderFormProps {
 	onSubmit: (orderData: Omit<Order, 'id' | 'companyId' | 'companyName' | 'status' | 'pickupCode' | 'createdAt' | 'updatedAt'>) => void;
@@ -20,7 +20,7 @@ export function CreateOrderForm({ onSubmit, onCancel, currentUser, localConfigs,
 		? [currentUser.local!]
 		: localConfigs.map(config => config.name as Local);
 	
-	const initialLocal = (isLocal ? currentUser.local! : localConfigs[0]?.name || 'Local 1') as Local;
+	const initialLocal = (isLocal ? currentUser.local! : (localConfigs[0]?.name || '')) as Local;
 	const initialAddress = getLocalAddress(initialLocal, localConfigs);
 
 	const [formData, setFormData] = useState({

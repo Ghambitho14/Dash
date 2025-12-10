@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { User, mockUsers } from '../types/user';
+import { User } from '../types/user';
 import { Building2, Lock, User as UserIcon, LogIn } from 'lucide-react';
-import './Login.css';
+import { isAdminOrEmpresarial } from '../utils/roleUtils';
+import '../styles/Components/Login.css';
 
 interface LoginProps {
   onLogin: (user: User) => void;
+  users: User[];
 }
 
-export function Login({ onLogin }: LoginProps) {
+export function Login({ onLogin, users }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export function Login({ onLogin }: LoginProps) {
     e.preventDefault();
     setError('');
 
-    const user = mockUsers.find(
+    const user = users.find(
       u => u.username === username && u.password === password
     );
 
@@ -97,36 +99,55 @@ export function Login({ onLogin }: LoginProps) {
         </div>
 
         {/* Quick Login Buttons */}
-        <div className="quick-login-container">
-          <p className="quick-login-title">Acceso rápido para pruebas:</p>
-          
-          <div className="quick-login-buttons">
-            <button
-              onClick={() => handleQuickLogin(mockUsers[0])}
-              className="quick-login-button-admin"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <p>👑 <strong>Administrador</strong></p>
-                  <p style={{ color: '#9333ea' }}>admin / admin123</p>
-                </div>
-              </div>
-            </button>
-
-            <div className="quick-login-grid">
-              {mockUsers.slice(1).map((user) => (
+        {users.length > 0 && (
+          <div className="quick-login-container">
+            <p className="quick-login-title">Acceso rápido para pruebas:</p>
+            
+            <div className="quick-login-buttons">
+              {users.find(u => u.role === 'empresarial') && (
                 <button
-                  key={user.id}
-                  onClick={() => handleQuickLogin(user)}
-                  className="quick-login-button"
+                  onClick={() => handleQuickLogin(users.find(u => u.role === 'empresarial')!)}
+                  className="quick-login-button-admin"
                 >
-                  <p><strong>{user.local}</strong></p>
-                  <p className="quick-login-button-text">{user.username}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <p>👑 <strong>CEO</strong></p>
+                      <p style={{ color: '#9333ea' }}>{users.find(u => u.role === 'empresarial')!.username}</p>
+                    </div>
+                  </div>
                 </button>
-              ))}
+              )}
+              {users.find(u => u.role === 'admin') && (
+                <button
+                  onClick={() => handleQuickLogin(users.find(u => u.role === 'admin')!)}
+                  className="quick-login-button-admin"
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <p>🛡️ <strong>Administrador</strong></p>
+                      <p style={{ color: '#9333ea' }}>{users.find(u => u.role === 'admin')!.username}</p>
+                    </div>
+                  </div>
+                </button>
+              )}
+
+              {users.filter(u => u.role === 'local').length > 0 && (
+                <div className="quick-login-grid">
+                  {users.filter(u => u.role === 'local').map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => handleQuickLogin(user)}
+                      className="quick-login-button"
+                    >
+                      <p><strong>{user.local}</strong></p>
+                      <p className="quick-login-button-text">{user.username}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { DriverProfile } from './driver/DriverProfile';
 import { DriverWallet } from './driver/DriverWallet';
 import { DriverSettings } from './driver/DriverSettings';
 import { Package, MapPin } from 'lucide-react';
-import './DriverApp.css';
+import '../styles/Components/DriverApp.css';
 
 interface DriverAppProps {
 	orders: Order[];

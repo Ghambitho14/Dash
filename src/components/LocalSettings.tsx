@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LocalConfig } from '../utils/localConfig';
 import { X, Plus, Trash2, MapPin, Store } from 'lucide-react';
-import './LocalSettings.css';
+import '../styles/Components/LocalSettings.css';
 
 interface LocalSettingsProps {
 	onClose: () => void;
