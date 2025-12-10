@@ -1,0 +1,133 @@
+import { useState } from 'react';
+import { User, mockUsers } from '../types/user';
+import { Building2, Lock, User as UserIcon, LogIn } from 'lucide-react';
+import './Login.css';
+
+interface LoginProps {
+  onLogin: (user: User) => void;
+}
+
+export function Login({ onLogin }: LoginProps) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    const user = mockUsers.find(
+      u => u.username === username && u.password === password
+    );
+
+    if (user) {
+      onLogin(user);
+    } else {
+      setError('Usuario o contraseña incorrectos');
+    }
+  };
+
+  const handleQuickLogin = (user: User) => {
+    onLogin(user);
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-wrapper">
+        {/* Logo/Header */}
+        <div className="login-header">
+          <div className="login-logo">
+            <Building2 />
+          </div>
+          <h1 className="login-title">Sistema de Delivery</h1>
+          <p className="login-subtitle">Panel de Gestión de Pedidos</p>
+        </div>
+
+        {/* Login Form */}
+        <div className="login-form-container">
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-form-group">
+              <label className="login-label">
+                <div className="login-label-content">
+                  <UserIcon style={{ width: '1rem', height: '1rem' }} />
+                  Usuario
+                </div>
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="login-input"
+                placeholder="Ingresa tu usuario"
+                required
+              />
+            </div>
+
+            <div className="login-form-group">
+              <label className="login-label">
+                <div className="login-label-content">
+                  <Lock style={{ width: '1rem', height: '1rem' }} />
+                  Contraseña
+                </div>
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-input"
+                placeholder="Ingresa tu contraseña"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="login-error">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="login-button"
+            >
+              <LogIn style={{ width: '1.25rem', height: '1.25rem' }} />
+              Iniciar Sesión
+            </button>
+          </form>
+        </div>
+
+        {/* Quick Login Buttons */}
+        <div className="quick-login-container">
+          <p className="quick-login-title">Acceso rápido para pruebas:</p>
+          
+          <div className="quick-login-buttons">
+            <button
+              onClick={() => handleQuickLogin(mockUsers[0])}
+              className="quick-login-button-admin"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p>👑 <strong>Administrador</strong></p>
+                  <p style={{ color: '#9333ea' }}>admin / admin123</p>
+                </div>
+              </div>
+            </button>
+
+            <div className="quick-login-grid">
+              {mockUsers.slice(1).map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => handleQuickLogin(user)}
+                  className="quick-login-button"
+                >
+                  <p><strong>{user.local}</strong></p>
+                  <p className="quick-login-button-text">{user.username}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,218 @@
+.local-settings {
+	padding: 1.5rem;
+}
+
+.local-settings-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.5rem;
+}
+
+.local-settings-header-content h3 {
+	color: #111827;
+	margin: 0 0 0.25rem;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.local-settings-header-content p {
+	color: #4b5563;
+	margin: 0;
+}
+
+.local-settings-close {
+	width: 2rem;
+	height: 2rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	transition: background-color 0.15s;
+}
+
+.local-settings-close:hover {
+	background-color: #f3f4f6;
+}
+
+.local-settings-close svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	color: #4b5563;
+}
+
+.local-settings-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.local-settings-item {
+	background-color: #ffffff;
+	padding: 1.25rem;
+	border-radius: 0.75rem;
+	border: 1px solid #e2e8f0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	transition: all 0.3s ease;
+}
+
+.local-settings-item:hover {
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+	transform: translateY(-2px);
+}
+
+.local-settings-item-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 0.75rem;
+}
+
+.local-settings-item-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.local-settings-item-title svg {
+	width: 1rem;
+	height: 1rem;
+	color: #4b5563;
+}
+
+.local-settings-item-title-text {
+	color: #374151;
+	font-weight: 500;
+	margin: 0;
+}
+
+.local-settings-item-delete {
+	padding: 0.5rem;
+	color: #dc2626;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: 0.5rem;
+	transition: background-color 0.15s;
+}
+
+.local-settings-item-delete:hover {
+	background-color: #fef2f2;
+}
+
+.local-settings-item-delete svg {
+	width: 1rem;
+	height: 1rem;
+}
+
+.local-settings-item-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.local-settings-item-field {
+	display: flex;
+	flex-direction: column;
+}
+
+.local-settings-item-label {
+	display: block;
+	color: #374151;
+	margin-bottom: 0.25rem;
+	font-size: 0.875rem;
+}
+
+.local-settings-item-label-content {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.local-settings-item-label-content svg {
+	width: 0.75rem;
+	height: 0.75rem;
+}
+
+.local-settings-item-input {
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.local-settings-item-input:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.local-settings-add {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	border: 2px dashed #d1d5db;
+	border-radius: 0.5rem;
+	background: none;
+	cursor: pointer;
+	transition: all 0.15s;
+	color: #4b5563;
+	margin-bottom: 1.5rem;
+}
+
+.local-settings-add:hover {
+	border-color: #60a5fa;
+	color: #2563eb;
+}
+
+.local-settings-add svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.local-settings-actions {
+	display: flex;
+	gap: 0.75rem;
+}
+
+.local-settings-button {
+	flex: 1;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s;
+	font-size: 0.875rem;
+}
+
+.local-settings-button-cancel {
+	border: 1px solid #d1d5db;
+	color: #374151;
+	background-color: white;
+}
+
+.local-settings-button-cancel:hover {
+	background-color: #f9fafb;
+}
+
+.local-settings-button-save {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.local-settings-button-save:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+

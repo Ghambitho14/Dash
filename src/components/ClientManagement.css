@@ -1,0 +1,339 @@
+.client-management-overlay {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 50;
+	padding: 1rem;
+	animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.client-management-content {
+	background-color: white;
+	border-radius: 1.5rem;
+	width: 100%;
+	max-width: 42rem;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+	animation: slideUp 0.3s ease;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	display: flex;
+	flex-direction: column;
+}
+
+@keyframes slideUp {
+	from {
+		transform: translateY(20px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.client-management-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	padding: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid #e5e7eb;
+	flex-shrink: 0;
+}
+
+.client-management-header-content {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	flex: 1;
+}
+
+.client-management-header-icon {
+	width: 3rem;
+	height: 3rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border-radius: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	flex-shrink: 0;
+}
+
+.client-management-header-icon svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: white;
+}
+
+.client-management-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #111827;
+	margin: 0 0 0.25rem 0;
+}
+
+.client-management-subtitle {
+	font-size: 0.875rem;
+	color: #6b7280;
+	margin: 0;
+}
+
+.client-management-close {
+	width: 2.25rem;
+	height: 2.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	transition: background-color 0.15s;
+	color: #9ca3af;
+	flex-shrink: 0;
+}
+
+.client-management-close:hover {
+	background-color: #f3f4f6;
+	color: #4b5563;
+}
+
+.client-management-close svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.client-management-actions {
+	padding: 1rem 1.5rem;
+	border-bottom: 1px solid #e5e7eb;
+	flex-shrink: 0;
+}
+
+.client-management-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.5rem;
+	border-radius: 0.75rem;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s;
+	font-weight: 600;
+	font-size: 0.875rem;
+	width: 100%;
+}
+
+.client-management-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.client-management-button-add {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.client-management-button-add:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.client-management-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.client-management-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 1.5rem;
+	text-align: center;
+}
+
+.client-management-empty-icon {
+	width: 4rem;
+	height: 4rem;
+	color: #9ca3af;
+	margin-bottom: 1rem;
+}
+
+.client-management-empty-text {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #111827;
+	margin: 0 0 0.25rem 0;
+}
+
+.client-management-empty-subtext {
+	font-size: 0.875rem;
+	color: #6b7280;
+	margin: 0;
+}
+
+.client-management-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem;
+	background-color: #f9fafb;
+	border: 1px solid #e5e7eb;
+	border-radius: 0.75rem;
+	transition: all 0.15s;
+}
+
+.client-management-item:hover {
+	background-color: white;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	border-color: #d1d5db;
+}
+
+.client-management-item-content {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.client-management-item-avatar {
+	width: 3rem;
+	height: 3rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border-radius: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	flex-shrink: 0;
+}
+
+.client-management-item-avatar svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: white;
+}
+
+.client-management-item-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.client-management-item-name {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #111827;
+	margin: 0 0 0.5rem 0;
+}
+
+.client-management-item-details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.client-management-item-detail {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	color: #6b7280;
+}
+
+.client-management-item-detail svg {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
+.client-management-item-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.client-management-item-button {
+	width: 2.5rem;
+	height: 2.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.client-management-item-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.client-management-item-button-edit {
+	background-color: #eff6ff;
+	color: #2563eb;
+}
+
+.client-management-item-button-edit:hover {
+	background-color: #dbeafe;
+}
+
+.client-management-item-button-delete {
+	background-color: #fef2f2;
+	color: #dc2626;
+}
+
+.client-management-item-button-delete:hover {
+	background-color: #fee2e2;
+}
+
+@media (max-width: 640px) {
+	.client-management-overlay {
+		padding: 0;
+		align-items: flex-end;
+	}
+
+	.client-management-content {
+		border-radius: 1rem 1rem 0 0;
+		max-height: 95vh;
+		border-bottom: none;
+	}
+
+	.client-management-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.client-management-item-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+}
+

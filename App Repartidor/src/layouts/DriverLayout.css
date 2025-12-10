@@ -1,0 +1,208 @@
+.driver-layout {
+	min-height: 100vh;
+	background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%);
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	width: 100%;
+	max-width: 100vw;
+	position: relative;
+}
+
+.driver-layout-header {
+	background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+	border-bottom: 1px solid #e2e8f0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 50;
+	width: 100%;
+	min-height: 4rem;
+}
+
+.driver-layout-header-content {
+	max-width: 48rem;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.driver-layout-menu-button {
+	padding: 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: 0.5rem;
+	transition: background-color 0.15s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.driver-layout-menu-button:hover {
+	background-color: #f3f4f6;
+}
+
+.driver-layout-menu-button svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: #374151;
+}
+
+@media (min-width: 768px) {
+	.driver-layout-menu-button {
+		display: none;
+	}
+}
+
+.driver-layout-header-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.driver-layout-header-name {
+	color: #111827;
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+@media (max-width: 640px) {
+	.driver-layout-header-name {
+		font-size: 1rem;
+	}
+}
+
+.driver-layout-header-right {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-shrink: 0;
+}
+
+.driver-layout-status-switch-container {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.driver-layout-logout-button {
+	padding: 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	border-radius: 0.5rem;
+	transition: background-color 0.15s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	color: #dc2626;
+}
+
+.driver-layout-logout-button:hover {
+	background-color: #fef2f2;
+}
+
+.driver-layout-logout-button svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.driver-layout-status-switch {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	cursor: pointer;
+	user-select: none;
+}
+
+.driver-layout-status-switch input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.driver-layout-status-slider {
+	position: relative;
+	width: 3rem;
+	height: 1.5rem;
+	background-color: #cbd5e1;
+	border-radius: 9999px;
+	transition: background-color 0.3s;
+}
+
+.driver-layout-status-slider::before {
+	content: '';
+	position: absolute;
+	width: 1.25rem;
+	height: 1.25rem;
+	left: 0.125rem;
+	top: 0.125rem;
+	background-color: white;
+	border-radius: 50%;
+	transition: transform 0.3s;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.driver-layout-status-switch input:checked + .driver-layout-status-slider {
+	background-color: #16a34a;
+}
+
+.driver-layout-status-switch input:checked + .driver-layout-status-slider::before {
+	transform: translateX(1.5rem);
+}
+
+.driver-layout-status-label {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: #374151;
+	white-space: nowrap;
+}
+
+.driver-layout-status-switch input:checked ~ .driver-layout-status-label {
+	color: #16a34a;
+}
+
+@media (max-width: 640px) {
+	.driver-layout-status-label {
+		font-size: 0.75rem;
+	}
+
+	.driver-layout-status-slider {
+		width: 2.5rem;
+		height: 1.25rem;
+	}
+
+	.driver-layout-status-slider::before {
+		width: 1rem;
+		height: 1rem;
+	}
+
+	.driver-layout-status-switch input:checked + .driver-layout-status-slider::before {
+		transform: translateX(1.25rem);
+	}
+}
+
+.driver-layout-main {
+	flex: 1;
+	padding-top: 4rem;
+	overflow-x: hidden;
+	width: 100%;
+	max-width: 100%;
+	display: flex;
+}
+
+@media (min-width: 640px) {
+	.driver-layout-main {
+		padding-top: 4.5rem;
+	}
+}
+

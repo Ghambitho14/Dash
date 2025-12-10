@@ -1,0 +1,239 @@
+import { useState, useEffect } from 'react';
+import { Order, OrderStatus } from '../../types/order';
+import { X, MapPin, Navigation, DollarSign, Clock, Package, AlertCircle } from 'lucide-react';
+import { getStatusIcon, getNextStatus } from '../../utils/statusUtils';
+import { formatDate } from '../../utils/dateUtils';
+import { formatPrice } from '../../utils/priceUtils';
+import { PickupCodeModal } from './PickupCodeModal';
+import './OrderDetail.css';
+
+interface OrderDetailProps {
+	order: Order;
+	onClose: () => void;
+	onAcceptOrder?: (orderId: string) => void;
+	onUpdateStatus?: (orderId: string, newStatus: OrderStatus) => void;
+}
+
+export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }: OrderDetailProps) {
+	const StatusIcon = getStatusIcon(order.status);
+	const nextStatus = getNextStatus(order.status);
+	const isAssigned = order.status === 'Asignado';
+	const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+	const [showPickupCodeModal, setShowPickupCodeModal] = useState(false);
+
+	// Asegurar que el componente se actualice cuando cambia el estado del pedido
+	useEffect(() => {
+		// Este efecto fuerza la actualización cuando cambia el estado
+	}, [order.status, order.id]);
+
+	// Calcular tiempo restante si el pedido está "Asignado"
+	useEffect(() => {
+		if (order.status === 'Asignado') {
+			const updateTimer = () => {
+				const now = new Date();
+				const updatedAt = new Date(order.updatedAt);
+				const elapsed = Math.floor((now.getTime() - updatedAt.getTime()) / 1000); // segundos transcurridos
+				const remaining = Math.max(0, 60 - elapsed); // 60 segundos = 1 minuto
+				setTimeRemaining(remaining);
+			};
+
+			updateTimer();
+			const interval = setInterval(updateTimer, 1000);
+
+			return () => clearInterval(interval);
+		} else {
+			setTimeRemaining(null);
+		}
+	}, [order.status, order.updatedAt]);
+
+	const handleAccept = () => {
+		if (onAcceptOrder) {
+			onAcceptOrder(order.id);
+		}
+	};
+
+	const handleUpdateStatus = () => {
+		if (onUpdateStatus && nextStatus) {
+			// Si el siguiente estado es "Producto retirado", pedir el código primero
+			if (nextStatus === 'Producto retirado') {
+				setShowPickupCodeModal(true);
+			} else {
+				onUpdateStatus(order.id, nextStatus);
+				setTimeout(() => {
+					onClose();
+				}, 300);
+			}
+		}
+	};
+
+	const handlePickupCodeConfirm = (code: string) => {
+		if (code === order.pickupCode) {
+			if (onUpdateStatus && nextStatus) {
+				onUpdateStatus(order.id, nextStatus);
+				setShowPickupCodeModal(false);
+				setTimeout(() => {
+					onClose();
+				}, 300);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	return (
+		<div className={`order-detail-driver ${isAssigned ? 'order-detail-driver-assigned' : ''}`}>
+			{/* Header con Alerta si está asignado */}
+			<div className="order-detail-driver-header">
+				<div className="order-detail-driver-header-main">
+					<div className="order-detail-driver-header-top">
+						<div className={`order-detail-driver-header-icon ${isAssigned ? 'order-detail-driver-header-icon-assigned' : 'order-detail-driver-header-icon-available'}`}>
+							<StatusIcon />
+						</div>
+						<div>
+							<h2 className="order-detail-driver-header-title">{order.id}</h2>
+							<div className="order-detail-driver-header-time">
+								<Clock />
+								<span>Creado: {formatDate(order.createdAt)}</span>
+							</div>
+						</div>
+					</div>
+					{isAssigned && (
+						<div className="order-detail-driver-alert">
+							<AlertCircle />
+							<span className="order-detail-driver-alert-text">
+								¡Di que ya vas en camino! 
+								{timeRemaining !== null && timeRemaining > 0 && (
+									<span style={{ marginLeft: '0.5rem', fontWeight: '700' }}>
+										({timeRemaining}s restantes)
+									</span>
+								)}
+							</span>
+						</div>
+					)}
+				</div>
+				<button
+					onClick={onClose}
+					className="order-detail-driver-close"
+					aria-label="Cerrar"
+				>
+					<X />
+				</button>
+			</div>
+
+			{/* Order Details */}
+			<div className="order-detail-driver-content">
+				{/* Progreso del Pedido */}
+				<div className="order-detail-driver-item order-detail-driver-item-border-2">
+					<div className={`order-detail-driver-item-icon ${isAssigned ? 'order-detail-driver-item-icon-assigned' : 'order-detail-driver-item-icon-available'}`}>
+						<StatusIcon />
+					</div>
+					<div className="order-detail-driver-item-content">
+						<p className="order-detail-driver-item-label">Progreso del Pedido</p>
+						<p className="order-detail-driver-item-value">{order.status}</p>
+					</div>
+				</div>
+
+				{/* Local */}
+				<div className="order-detail-driver-item">
+					<div className="order-detail-driver-item-icon order-detail-driver-item-icon-gray">
+						<Package />
+					</div>
+					<div className="order-detail-driver-item-content">
+						<p className="order-detail-driver-item-label">Local</p>
+						<p className="order-detail-driver-item-value">{order.local}</p>
+					</div>
+				</div>
+
+				{/* Pickup Address */}
+				<div className="order-detail-driver-item order-detail-driver-item-start">
+					<div className="order-detail-driver-item-icon order-detail-driver-item-icon-available">
+						<MapPin />
+					</div>
+					<div className="order-detail-driver-item-content">
+						<p className="order-detail-driver-item-label">Dirección de Retiro</p>
+						<p className="order-detail-driver-item-text">{order.pickupAddress}</p>
+					</div>
+				</div>
+
+				{/* Delivery Address */}
+				<div className="order-detail-driver-item order-detail-driver-item-start">
+					<div className="order-detail-driver-item-icon order-detail-driver-item-icon-orange">
+						<Navigation />
+					</div>
+					<div className="order-detail-driver-item-content">
+						<p className="order-detail-driver-item-label">Dirección de Entrega</p>
+						<p className="order-detail-driver-item-text">{order.deliveryAddress}</p>
+					</div>
+				</div>
+
+				{/* Precio del Reparto */}
+				<div className="order-detail-driver-item order-detail-driver-item-price">
+					<div className="order-detail-driver-item-icon order-detail-driver-item-icon-green">
+						<DollarSign />
+					</div>
+					<div className="order-detail-driver-item-content">
+						<p className="order-detail-driver-item-label order-detail-driver-item-price-label">Precio del Reparto</p>
+						<p className="order-detail-driver-item-price-value">${formatPrice(order.suggestedPrice)}</p>
+					</div>
+				</div>
+			</div>
+
+			{/* Actions */}
+			<div className="order-detail-driver-actions">
+				{order.status === 'Pendiente' && (
+					<>
+						<button
+							onClick={onClose}
+							className="order-detail-driver-button order-detail-driver-button-secondary order-detail-driver-button-medium"
+						>
+							Cancelar
+						</button>
+						<button
+							onClick={handleAccept}
+							className="order-detail-driver-button order-detail-driver-button-primary"
+						>
+							Aceptar Pedido
+						</button>
+					</>
+				)}
+
+				{order.status !== 'Pendiente' && order.status !== 'Entregado' && nextStatus && (
+					<>
+						<button
+							onClick={onClose}
+							className="order-detail-driver-button order-detail-driver-button-secondary order-detail-driver-button-medium"
+						>
+							Cerrar
+						</button>
+						<button
+							onClick={handleUpdateStatus}
+							className={`order-detail-driver-button ${isAssigned ? 'order-detail-driver-button-orange' : 'order-detail-driver-button-blue'}`}
+						>
+							{nextStatus === 'Entregado' ? 'Entregar pedido' : `Marcar como: ${nextStatus}`}
+						</button>
+					</>
+				)}
+
+				{order.status === 'Entregado' && (
+					<button
+						onClick={onClose}
+						className="order-detail-driver-button order-detail-driver-button-blue"
+					>
+						Cerrar
+					</button>
+				)}
+			</div>
+
+			{/* Modal de código de retiro */}
+			{showPickupCodeModal && (
+				<PickupCodeModal
+					onClose={() => setShowPickupCodeModal(false)}
+					onConfirm={handlePickupCodeConfirm}
+					orderId={order.id}
+				/>
+			)}
+		</div>
+	);
+}
+
