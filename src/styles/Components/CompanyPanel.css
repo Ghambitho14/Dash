@@ -565,9 +565,11 @@
 	color: #2563eb;
 }
 
+/* Responsive para móvil */
 @media (max-width: 640px) {
 	.company-main-content {
 		padding: 1rem;
+		padding-top: 5rem;
 	}
 
 	.company-main-header-top {
@@ -587,6 +589,7 @@
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;
 		gap: 0.25rem;
+		margin-bottom: 1rem;
 	}
 
 	.company-tabs::-webkit-scrollbar {
@@ -597,6 +600,12 @@
 		font-size: 0.875rem;
 		padding: 0.625rem 0.75rem;
 		white-space: nowrap;
+		min-width: fit-content;
+	}
+
+	.company-sidebar {
+		width: 100%;
+		max-width: 20rem;
 	}
 
 	.company-sidebar-stats {
@@ -605,6 +614,43 @@
 
 	.company-stat-card {
 		padding: 0.75rem;
+	}
+
+	.company-stat-value {
+		font-size: 0.8125rem;
+	}
+
+	.company-button {
+		font-size: 0.8125rem;
+		padding: 0.625rem 0.75rem;
+	}
+
+	.company-sidebar-user-info h3 {
+		font-size: 0.9375rem;
+	}
+
+	.company-sidebar-user-info p {
+		font-size: 0.8125rem;
+	}
+}
+
+/* Responsive para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+	.company-sidebar {
+		width: 14rem;
+	}
+
+	.company-main {
+		margin-left: 14rem;
+	}
+
+	.company-main-header {
+		left: 14rem;
+		width: calc(100% - 14rem);
+	}
+
+	.company-main-content {
+		padding: 1.25rem;
 	}
 }
 

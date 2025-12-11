@@ -201,4 +201,30 @@
 	.driver-modal-content {
 		border-radius: 0.75rem;
 	}
+
+	.driver-stats {
+		padding: 1.5rem;
+	}
+
+	.driver-stats-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+	}
+}
+
+/* Responsive para tablets */
+@media (min-width: 768px) {
+	.driver-stats {
+		max-width: 56rem;
+		padding: 2rem;
+	}
+
+	.driver-tabs {
+		gap: 1rem;
+	}
+
+	.driver-tab {
+		padding: 0.875rem 1rem;
+		font-size: 1rem;
+	}
 }

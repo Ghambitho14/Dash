@@ -1,0 +1,330 @@
+.order-detail-company {
+	padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+	.order-detail-company {
+		padding: 2rem;
+	}
+}
+
+.order-detail-company-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 2rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.order-detail-company-header-main {
+	flex: 1;
+}
+
+.order-detail-company-header-top {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.5rem;
+}
+
+.order-detail-company-header-icon {
+	width: 3rem;
+	height: 3rem;
+	background-color: #dbeafe;
+	border-radius: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.order-detail-company-header-icon svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: #2563eb;
+}
+
+.order-detail-company-header-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #111827;
+	margin: 0;
+}
+
+.order-detail-company-header-time {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	color: #6b7280;
+	margin-top: 0.25rem;
+}
+
+.order-detail-company-header-time svg {
+	width: 1rem;
+	height: 1rem;
+}
+
+.order-detail-company-close {
+	width: 2.25rem;
+	height: 2.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	transition: background-color 0.15s;
+	color: #9ca3af;
+}
+
+.order-detail-company-close:hover {
+	background-color: #f3f4f6;
+	color: #4b5563;
+}
+
+.order-detail-company-close svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}
+
+.order-detail-company-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin-bottom: 2rem;
+}
+
+.order-detail-company-item {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1.25rem;
+	background-color: white;
+	border: 1px solid #e2e8f0;
+	border-radius: 1rem;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	transition: all 0.3s ease;
+}
+
+.order-detail-company-item:hover {
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+	transform: translateX(4px);
+}
+
+.order-detail-company-item-start {
+	align-items: flex-start;
+}
+
+.order-detail-company-item-icon {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	flex-shrink: 0;
+}
+
+.order-detail-company-item-icon-blue {
+	background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+.order-detail-company-item-icon-purple {
+	background: linear-gradient(to bottom right, #a855f7, #9333ea);
+}
+
+.order-detail-company-item-icon-gray {
+	background: linear-gradient(to bottom right, #6b7280, #4b5563);
+}
+
+.order-detail-company-item-icon-orange {
+	background: linear-gradient(to bottom right, #f97316, #ea580c);
+}
+
+.order-detail-company-item-icon-green {
+	background: linear-gradient(to bottom right, #22c55e, #16a34a);
+}
+
+.order-detail-company-item-icon svg {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: white;
+}
+
+.order-detail-company-item-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.order-detail-company-item-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+	color: #6b7280;
+	margin-bottom: 0.25rem;
+}
+
+.order-detail-company-item-value {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #111827;
+	margin: 0;
+}
+
+.order-detail-company-item-text {
+	font-size: 1rem;
+	color: #111827;
+	line-height: 1.625;
+	margin: 0;
+}
+
+.order-detail-company-item-price {
+	background: linear-gradient(to bottom right, #f0fdf4, #ecfdf5);
+	border: 1px solid #86efac;
+}
+
+.order-detail-company-item-price-label {
+	color: #15803d;
+}
+
+.order-detail-company-item-price-value {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #15803d;
+}
+
+.order-detail-company-actions {
+	display: flex;
+	gap: 0.75rem;
+	padding-top: 1rem;
+	border-top: 1px solid #e5e7eb;
+}
+
+.order-detail-company-button {
+	flex: 1;
+	padding: 0.875rem 1.5rem;
+	border-radius: 0.75rem;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s;
+	font-weight: 600;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.order-detail-company-button:hover {
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.order-detail-company-button-primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.order-detail-company-button-primary:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.order-detail-company-item-code {
+	background: linear-gradient(to bottom right, #fef3c7, #fde68a);
+	border: 1px solid #fcd34d;
+}
+
+.order-detail-company-item-icon-yellow {
+	background: linear-gradient(to bottom right, #fbbf24, #f59e0b);
+}
+
+.order-detail-company-item-code-value {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: #78350f;
+	letter-spacing: 0.05em;
+}
+
+/* Responsive para móvil */
+@media (max-width: 640px) {
+	.order-detail-company {
+		padding: 1rem;
+	}
+
+	.order-detail-company-header {
+		flex-direction: column;
+		gap: 1rem;
+		align-items: flex-start;
+		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+	}
+
+	.order-detail-company-header-title {
+		font-size: 1.25rem;
+	}
+
+	.order-detail-company-header-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+	}
+
+	.order-detail-company-header-icon svg {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+
+	.order-detail-company-item {
+		padding: 1rem;
+		flex-direction: column;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+
+	.order-detail-company-item-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+	}
+
+	.order-detail-company-item-icon svg {
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+
+	.order-detail-company-item-value {
+		font-size: 0.9375rem;
+		word-break: break-word;
+	}
+
+	.order-detail-company-item-text {
+		font-size: 0.875rem;
+		word-break: break-word;
+	}
+
+	.order-detail-company-item-price-value {
+		font-size: 1.25rem;
+	}
+
+	.order-detail-company-item-code-value {
+		font-size: 1.25rem;
+	}
+
+	.order-detail-company-actions {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.order-detail-company-button {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		font-size: 0.9375rem;
+	}
+}
+
+/* Responsive para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+	.order-detail-company {
+		padding: 1.5rem;
+	}
+}
+

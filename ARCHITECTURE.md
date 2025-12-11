@@ -1,405 +1,449 @@
 # Arquitectura del Proyecto - Sistema de Delivery
 
-Este documento describe la estructura y funcionalidad de cada archivo en el proyecto.
-
-## 📁 Estructura General
-
-El proyecto está dividido en dos aplicaciones separadas:
-- **Proyecto Principal** (`src/`): Aplicación para la empresa/administradores
-- **App Repartidor** (`App Repartidor/src/`): Aplicación para los repartidores
+Este documento describe la arquitectura completa del sistema de delivery, incluyendo las tres aplicaciones principales y su estructura.
 
 ---
 
-## 🏢 Proyecto Principal (Empresa)
+## Estructura General del Proyecto
 
-### 📂 `src/`
-
-#### `App.tsx`
-**Función**: Componente raíz de la aplicación de empresa.
-- Gestiona el estado global (usuarios, pedidos, clientes, locales)
-- Maneja la autenticación y renderiza `Login` o `CompanyLayout`
-- Persiste datos en `localStorage` (pedidos, clientes, configuración de locales)
-- Coordina la comunicación entre componentes principales
-
-#### `main.tsx`
-**Función**: Punto de entrada de la aplicación React.
-- Inicializa React DOM
-- Importa estilos globales y utilidades
+```
+App/
+├── src/                          # DeliveryApp (App Empresarial) - Solo Web
+├── Paneladmin/                   # Panel Admin - Solo Web
+├── App Repartidor/               # App Repartidor - Web + APK Android
+├── Database/                     # Scripts SQL y documentación de BD
+├── server.js                     # Servidor Express unificado
+└── package.json                  # Configuración principal
+```
 
 ---
 
-### 📂 `src/types/`
-
-#### `order.ts`
-**Función**: Define tipos TypeScript relacionados con pedidos.
-- `OrderStatus`: Estados posibles de un pedido (Pendiente, Asignado, En camino al retiro, Producto retirado, Entregado)
-- `Local`: Tipos de locales disponibles
-- `Order`: Interfaz completa de un pedido (id, cliente, direcciones, precio, estado, código de retiro, etc.)
-
-#### `user.ts`
-**Función**: Define tipos y datos mock de usuarios.
-- `UserRole`: Roles disponibles (admin, local, superadmin)
-- `User`: Interfaz de usuario con credenciales y permisos
-- `mockUsers`: Usuarios de prueba para desarrollo
-
-#### `client.ts`
-**Función**: Define tipos relacionados con clientes.
-- `Client`: Interfaz de cliente (id, nombre, teléfono, dirección, local asignado, fechas)
-
----
-
-### 📂 `src/utils/`
-
-#### `codeUtils.ts`
-**Función**: Genera códigos de retiro para pedidos.
-- `generatePickupCode()`: Genera un código numérico de 6 dígitos único para cada pedido
-
-#### `dateUtils.ts`
-**Función**: Utilidades para formateo y manejo de fechas.
-- `formatDate()`: Formatea fechas en formato legible
-- `formatRelativeTime()`: Muestra tiempo relativo (hace X minutos/horas)
-- `useCurrentTime()`: Hook que actualiza el tiempo actual cada minuto
-
-#### `priceUtils.ts`
-**Función**: Utilidades para formateo de precios.
-- `formatPrice()`: Formatea números como moneda chilena (CLP)
-
-#### `statusUtils.ts`
-**Función**: Lógica de estados de pedidos.
-- `getStatusColor()`: Retorna el color CSS según el estado
-- `getStatusIcon()`: Retorna el icono correspondiente al estado
-- `getNextStatus()`: Determina el siguiente estado válido en el flujo
-- `formatStatusForCompany()`: Formatea el estado para mostrar en la vista de empresa (ej: "Producto retirado, en camino")
-
-#### `localConfig.ts`
-**Función**: Configuración de locales.
-- `LocalConfig`: Interfaz de configuración de local (nombre, dirección)
-- `defaultLocalConfigs`: Configuración inicial de locales
-- `getLocalAddress()`: Obtiene la dirección de un local por su nombre
-
-#### `mockData.ts`
-**Función**: Datos de prueba para desarrollo.
-- `mockOrders`: Array de pedidos de ejemplo
-
----
-
-### 📂 `src/components/`
-
-#### `Login.tsx`
-**Función**: Componente de autenticación.
-- Formulario de login (usuario y contraseña)
-- Valida credenciales contra `mockUsers`
-- Botones de acceso rápido para desarrollo
-- Maneja errores de autenticación
-
-#### `CompanyPanel.tsx`
-**Función**: Panel principal de gestión de pedidos.
-- Sidebar con estadísticas, acciones y filtros
-- Lista de pedidos con filtros por estado y local
-- Gestión de modales (crear pedido, configurar clientes, configurar locales)
-- Filtrado de pedidos según rol del usuario (admin ve todos, local ve solo los suyos)
-
-#### `CreateOrderForm.tsx`
-**Función**: Formulario para crear nuevos pedidos.
-- Campos: nombre del cliente (con búsqueda), dirección de retiro, dirección de entrega, local, precio sugerido, notas
-- Búsqueda y selección de clientes existentes
-- Auto-completado de dirección al seleccionar cliente
-- Validación de campos requeridos
-
-#### `CreateClientForm.tsx`
-**Función**: Formulario para crear/editar clientes.
-- Campos: nombre, teléfono, dirección, local asignado
-- Modo creación y edición
-- Validación de formato de teléfono
-- Selector de local (filtrado según rol del usuario)
-
-#### `ClientManagement.tsx`
-**Función**: Gestión completa de clientes.
-- Lista todos los clientes (filtrados por local si es usuario local)
-- Botones para agregar, editar y eliminar clientes
-- Integra `CreateClientForm` para creación/edición
-- Muestra información completa de cada cliente
-
-#### `LocalSettings.tsx`
-**Función**: Configuración de locales (solo para admin).
-- Lista de locales configurados
-- Permite agregar, editar y eliminar locales
-- Guarda configuración en `localStorage`
-
-#### `OrderList.tsx`
-**Función**: Componente que renderiza la lista de pedidos.
-- Recibe array de pedidos y funciones de callback
-- Muestra estado vacío si no hay pedidos
-- Renderiza `OrderCard` para cada pedido
-
-#### `OrderCard.tsx` (en `company/`)
-**Función**: Tarjeta individual de pedido para la vista de empresa.
-- Muestra información resumida: ID, cliente, direcciones, precio, estado, código de retiro
-- Botón para eliminar pedido
-- Click para ver detalles completos
-- Formatea estado con colores e iconos
-
-#### `OrderDetail.tsx` (en `company/`)
-**Función**: Vista detallada de un pedido (modal).
-- Muestra toda la información del pedido
-- Incluye código de retiro destacado
-- Botones de acción (cerrar, eliminar)
-- Diseño responsive
-
-#### `Modal.tsx` (en `common/`)
-**Función**: Componente modal reutilizable.
-- Overlay con blur
-- Contenido centrado con animaciones
-- Tamaños configurables (sm, md, lg, xl, 2xl)
-- Responsive (se adapta a móvil)
-
----
-
-### 📂 `src/layouts/`
-
-#### `CompanyLayout.tsx`
-**Función**: Layout principal de la aplicación de empresa.
-- Header fijo con título, nombre de usuario y botón de logout
-- Contenedor para el contenido principal
-- Diseño responsive
-
----
-
-### 📂 `src/styles/`
-
-#### Organización de Estilos
-
-Todos los estilos están organizados en la carpeta `styles/` siguiendo la misma estructura que los componentes:
-
-- **`styles/Components/`**: Estilos de componentes
-  - `company/`: Estilos de componentes específicos de empresa (OrderCard, OrderDetail)
-  - `common/`: Estilos de componentes compartidos (Modal)
-  - Archivos directos: Estilos de componentes principales (CompanyPanel, CreateOrderForm, etc.)
-
-- **`styles/layouts/`**: Estilos de layouts (CompanyLayout)
-
-- **`styles/utils/`**: Estilos de utilidades (statusUtils - clases de estado)
-
-- **`globals.css`**: Estilos globales de la aplicación
-
----
-
-## 🚗 App Repartidor
-
-### 📂 `App Repartidor/src/`
-
-#### `App.tsx`
-**Función**: Componente raíz de la aplicación de repartidor.
-- Gestiona el estado del repartidor autenticado
-- Maneja la autenticación y renderiza `Login` o `DriverLayout`
-- Persiste sesión del repartidor en `localStorage`
-- Coordina la vista activa (pedidos, perfil, billetera, configuración)
-
-#### `main.tsx`
-**Función**: Punto de entrada de la aplicación React del repartidor.
-- Inicializa React DOM
-- Importa estilos globales y utilidades
-
----
-
-### 📂 `App Repartidor/src/types/`
-
-#### `order.ts`
-**Función**: Define tipos TypeScript relacionados con pedidos (compartido con proyecto principal).
-
-#### `driver.ts`
-**Función**: Define tipos y datos mock de repartidores.
-- `Driver`: Interfaz de repartidor (id, credenciales, información personal, estado activo)
-- `mockDrivers`: Repartidores de prueba para desarrollo
-
----
-
-### 📂 `App Repartidor/src/utils/`
-
-#### `dateUtils.ts`, `priceUtils.ts`, `statusUtils.ts`, `mockData.ts`
-**Función**: Mismas utilidades que el proyecto principal (duplicadas para independencia).
-
----
-
-### 📂 `App Repartidor/src/components/`
-
-#### `Login.tsx`
-**Función**: Componente de autenticación para repartidores.
-- Formulario de login específico para repartidores
-- Valida credenciales contra `mockDrivers`
-- Botones de acceso rápido para desarrollo
-- Tema visual diferente (púrpura)
-
-#### `DriverApp.tsx`
-**Función**: Componente principal de la aplicación del repartidor.
-- Estadísticas de pedidos (total, asignados, entregados)
-- Tabs para filtrar pedidos (todos, disponibles, asignados)
-- Lista de pedidos disponibles y asignados
-- Maneja la aceptación de pedidos y cambio de estados
-- Integra diferentes vistas según `activeView` (pedidos, perfil, billetera, configuración)
-
-#### `OrderList.tsx`
-**Función**: Componente que renderiza la lista de pedidos (compartido con proyecto principal).
-
-#### `OrderCard.tsx` (en `driver/`)
-**Función**: Tarjeta individual de pedido para la vista de repartidor.
-- Muestra información resumida del pedido
-- Diferencia visual entre pedidos disponibles y asignados
-- Badge de "Asignado a ti" para pedidos propios
-- Botón para ver detalles o aceptar pedido
-
-#### `OrderDetail.tsx` (en `driver/`)
-**Función**: Vista detallada de un pedido para repartidor (modal).
-- Muestra toda la información del pedido
-- Botones de acción según el estado:
-  - "Aceptar pedido" si está disponible
-  - "Marcar como en camino" si está asignado
-  - "Marcar como Producto retirado" (requiere código)
-  - "Entregar pedido" si el producto fue retirado
-- Integra `PickupCodeModal` para validar código de retiro
-
-#### `PickupCodeModal.tsx`
-**Función**: Modal para ingresar código de retiro.
-- Solicita código de 6 dígitos antes de marcar como "Producto retirado"
-- Valida que el código coincida con el del pedido
-- Muestra errores de validación
-- Diseño con tema amarillo/dorado
-
-#### `DriverSidebar.tsx`
-**Función**: Menú lateral de navegación del repartidor.
-- Navegación entre vistas (Pedidos, Perfil, Billetera, Configuración)
-- Información del repartidor
-- Overlay en móvil
-- Solo visible en móvil (app mobile-only)
-
-#### `DriverProfile.tsx`
-**Función**: Vista de perfil del repartidor.
-- Muestra información personal (nombre, email, teléfono)
-- Avatar con gradiente
-- Diseño tipo tarjeta
-
-#### `DriverWallet.tsx`
-**Función**: Vista de billetera/ganancias del repartidor.
-- Muestra ganancias totales
-- Estadísticas de ganancias (del día, del mes)
-- Historial de transacciones (placeholder)
-
-#### `DriverSettings.tsx`
-**Función**: Vista de configuración del repartidor.
-- Toggles para notificaciones, privacidad, modo oscuro, idioma
-- Diseño tipo lista de configuraciones
-
-#### `Modal.tsx` (en `common/`)
-**Función**: Componente modal reutilizable (mismo que proyecto principal).
-
----
-
-### 📂 `App Repartidor/src/layouts/`
-
-#### `DriverLayout.tsx`
-**Función**: Layout principal de la aplicación del repartidor.
-- Header fijo con menú hamburguesa, nombre del repartidor, switch de conexión y botón de logout
-- Integra `DriverSidebar` para navegación
-- Diseño mobile-only (sin estilos de desktop)
-- Contenedor para el contenido principal
-
----
-
-### 📂 `App Repartidor/src/styles/`
-
-#### Organización de Estilos
-
-Misma estructura que el proyecto principal:
-- **`styles/Components/`**: Estilos de componentes
-  - `driver/`: Estilos de componentes específicos del repartidor
-  - `common/`: Estilos de componentes compartidos
-- **`styles/layouts/`**: Estilos de layouts
-- **`styles/utils/`**: Estilos de utilidades
-- **`globals.css`**: Estilos globales
-
----
-
-## 🔄 Flujo de la Aplicación
-
-### Aplicación de Empresa
-
-1. **Login** → Usuario ingresa credenciales
-2. **CompanyLayout** → Renderiza header y contenedor
-3. **CompanyPanel** → Panel principal con:
-   - Sidebar con estadísticas y acciones
-   - Lista de pedidos filtrados
-4. **Crear Pedido** → `CreateOrderForm` → Genera código de retiro → Agrega a lista
-5. **Gestionar Clientes** → `ClientManagement` → `CreateClientForm`
-6. **Ver Detalles** → `OrderDetail` (modal)
-
-### Aplicación de Repartidor
-
-1. **Login** → Repartidor ingresa credenciales
-2. **DriverLayout** → Renderiza header con menú y switch de conexión
-3. **DriverApp** → Vista principal con:
-   - Estadísticas
-   - Lista de pedidos disponibles/asignados
-4. **Aceptar Pedido** → Cambia estado a "Asignado"
-5. **Marcar como en camino** → Cambia estado a "En camino al retiro"
-6. **Marcar como retirado** → `PickupCodeModal` → Valida código → Cambia estado a "Producto retirado"
-7. **Entregar pedido** → Cambia estado a "Entregado"
-
----
-
-## 📊 Estados de Pedidos
-
-El flujo de estados es:
+## Aplicaciones del Sistema
+
+### 1. **DeliveryApp (App Empresarial)**
+**Ubicación**: `src/`  
+**Tipo**: Aplicación Web (React + Vite)  
+**Plataforma**: Solo Web (NO compila como APK)  
+**Puerto Desarrollo**: 5173 (por defecto)
+
+#### Propósito
+Aplicación para empresas y administradores locales para gestionar pedidos, clientes, usuarios y locales.
+
+#### Tecnologías
+- **Framework**: React 18.2.0
+- **Build Tool**: Vite 5.0.8
+- **Base de Datos**: Supabase
+- **Iconos**: Lucide React
+- **Estilos**: CSS Modules
+
+#### Componentes Principales
+
+##### Layouts
+- **`CompanyLayout.jsx`**: Layout principal con header, sidebar y área de contenido
+
+##### Componentes Core
+- **`CompanyPanel.jsx`**: Panel principal con gestión de pedidos, clientes y usuarios
+- **`Login.jsx`**: Autenticación de usuarios empresariales
+- **`OrderList.jsx`**: Lista de pedidos con filtros
+- **`OrderCard.jsx`**: Tarjeta individual de pedido
+- **`OrderDetail.jsx`**: Modal con detalles completos del pedido
+- **`CreateOrderForm.jsx`**: Formulario para crear nuevos pedidos
+- **`ClientManagement.jsx`**: Gestión CRUD de clientes
+- **`CreateClientForm.jsx`**: Formulario de creación/edición de clientes
+- **`UserManagement.jsx`**: Gestión CRUD de usuarios
+- **`CreateUserForm.jsx`**: Formulario de creación/edición de usuarios
+- **`LocalSettings.jsx`**: Configuración de locales
+- **`Modal.jsx`**: Componente modal reutilizable
+
+#### Estados de Pedidos
 1. **Pendiente** → Pedido creado, sin asignar
 2. **Asignado** → Repartidor aceptó el pedido
-3. **En camino al retiro** → Repartidor está yendo a retirar el producto
-4. **Producto retirado** → Repartidor retiró el producto (requiere código)
+3. **En camino al retiro** → Repartidor yendo a retirar
+4. **Producto retirado** → Repartidor retiró (requiere código)
 5. **Entregado** → Pedido completado
 
-**Nota**: El estado "En entrega" fue eliminado. Después de "Producto retirado" va directo a "Entregado".
+#### Roles de Usuario
+- **`empresarial`**: Acceso completo a todas las funciones
+- **`admin`**: Administrador con permisos extendidos
+- **`local`**: Usuario de local específico, acceso limitado
 
 ---
 
-## 💾 Persistencia de Datos
+### 2. **Panel Admin**
+**Ubicación**: `Paneladmin/`  
+**Tipo**: Aplicación Web (React + Vite)  
+**Plataforma**: Solo Web (NO compila como APK)  
+**Puerto Desarrollo**: 5174 (o siguiente disponible)
 
-- **localStorage**: Se usa para persistir:
-  - Sesión de usuario/repartidor
-  - Configuración de locales
-  - Lista de clientes
-  - Pedidos (en desarrollo, debería ser backend en producción)
+#### Propósito
+Panel de administración para superadministradores. Permite crear empresas, repartidores y usuarios empresariales.
 
----
+#### Tecnologías
+- **Framework**: React 19.2.0
+- **Build Tool**: Vite 7.2.4
+- **Base de Datos**: Supabase
+- **Iconos**: Lucide React
 
-## 🎨 Organización de Estilos
+#### Componentes Principales
+- **`Dashboard.jsx`**: Panel principal con gestión de empresas y repartidores
+- **`Login.jsx`**: Autenticación de superadministradores
 
-Todos los estilos están centralizados en `styles/` siguiendo la estructura de componentes:
-- Cada componente tiene su archivo CSS correspondiente
-- Estilos globales en `globals.css`
-- Estilos de utilidades (como estados) en `styles/utils/`
-- Estilos de layouts en `styles/layouts/`
-
-Esta organización facilita:
-- Mantenimiento
-- Búsqueda de estilos
-- Escalabilidad
-- Separación de concerns
-
----
-
-## 🔑 Características Principales
-
-1. **Código de Retiro**: Cada pedido tiene un código único de 6 dígitos que el repartidor debe ingresar para retirar el producto
-2. **Gestión de Clientes**: Sistema completo de CRUD de clientes con asignación a locales
-3. **Multi-local**: Soporte para múltiples locales con filtrado por usuario
-4. **Roles**: Sistema de roles (admin, local, superadmin) con permisos diferenciados
-5. **Responsive**: Ambas aplicaciones son completamente responsive
-6. **Mobile-only Repartidor**: La app de repartidor está diseñada solo para móvil
+#### Funcionalidades
+- Crear empresas (`companies`)
+- Crear repartidores (`drivers`)
+- Crear usuarios empresariales automáticamente al crear empresa
 
 ---
 
-## 📝 Notas de Desarrollo
+### 3. **App Repartidor**
+**Ubicación**: `App Repartidor/`  
+**Tipo**: Aplicación Híbrida (React + Capacitor)  
+**Plataforma**: Web + APK Android  
+**Puerto Desarrollo**: 5175 (o siguiente disponible)
 
-- Los datos están en `localStorage` (mock para desarrollo)
-- En producción, debería conectarse a un backend real
-- Los usuarios y repartidores están hardcodeados en `mockUsers` y `mockDrivers`
-- Los pedidos iniciales están en `mockData.ts`
+#### Propósito
+Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estados y gestionar entregas.
+
+#### Tecnologías
+- **Framework**: React 18.2.0
+- **Build Tool**: Vite 5.0.8
+- **Mobile**: Capacitor 6.0.0
+- **Base de Datos**: Supabase
+- **Iconos**: Lucide React
+
+#### Componentes Principales
+
+##### Layouts
+- **`DriverLayout.jsx`**: Layout con header, menú hamburguesa y switch de conexión
+
+##### Componentes Core
+- **`DriverApp.jsx`**: Vista principal con pedidos disponibles y asignados
+- **`Login.jsx`**: Autenticación de repartidores
+- **`DriverSidebar.jsx`**: Menú lateral con navegación
+- **`OrderList.jsx`**: Lista de pedidos
+- **`OrderCard.jsx`**: Tarjeta de pedido
+- **`OrderDetail.jsx`**: Detalles del pedido
+- **`PickupCodeModal.jsx`**: Modal para validar código de retiro
+- **`DriverProfile.jsx`**: Perfil del repartidor
+- **`DriverWallet.jsx`**: Billetera con ganancias
+- **`DriverSettings.jsx`**: Configuración del repartidor
+- **`Modal.jsx`**: Componente modal reutilizable
+
+#### Funcionalidades Especiales
+- **Timeout automático**: Pedidos "Asignado" se revierten a "Pendiente" si no se actualizan en 1 minuto
+- **Recarga periódica**: Pedidos se recargan automáticamente cada 30 segundos
+- **Historial de estados**: Cada cambio se registra en `order_status_history`
+- **Vista de completados**: Los repartidores pueden ver sus pedidos entregados
+
+#### Compilación APK
+- **Configuración**: `capacitor.config.json`
+- **Script**: `build-apk.bat` (Windows) o `build-apk.sh` (Linux/Mac)
+- **Salida**: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
+## Base de Datos (Supabase)
+
+### Tablas Principales
+
+#### `companies`
+- Información de empresas
+- Usado por: App Empresarial (lectura), Panel Admin (CRUD)
+
+#### `company_users`
+- Usuarios de empresas
+- Roles: `empresarial`, `admin`, `local`
+- Usado por: App Empresarial (CRUD + Login), Panel Admin (crear)
+
+#### `drivers`
+- Repartidores
+- Usado por: App Repartidor (Login + lectura), Panel Admin (CRUD), App Empresarial (lectura)
+
+#### `locals`
+- Locales/sucursales de empresas
+- Usado por: App Empresarial (CRUD), App Repartidor (lectura)
+
+#### `clients`
+- Clientes
+- Relación con `locals`
+- Usado por: App Empresarial (CRUD), App Repartidor (lectura)
+
+#### `orders`
+- Pedidos
+- Estados: Pendiente, Asignado, En camino al retiro, Producto retirado, Entregado
+- Relaciones: `clients`, `locals`, `drivers`, `company_users`
+- Usado por: Todas las apps
+
+#### `order_status_history`
+- Historial de cambios de estado de pedidos
+- Usado por: App Repartidor (crear)
+
+#### `superadmins`
+- Superadministradores
+- Usado por: Panel Admin (Login)
+
+---
+
+## Flujos de Datos
+
+### Flujo de Creación de Pedido
+1. Usuario empresarial crea pedido en `CreateOrderForm`
+2. Se genera código de retiro único (6 dígitos)
+3. Pedido se guarda en `orders` con estado "Pendiente"
+4. App Repartidor recibe el pedido en tiempo real
+5. Repartidor acepta → Estado cambia a "Asignado"
+6. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
+7. Repartidor ingresa código → Estado cambia a "Producto retirado"
+8. Repartidor entrega → Estado cambia a "Entregado"
+
+### Flujo de Autenticación
+
+#### App Empresarial
+1. Usuario ingresa email y password
+2. Consulta en `company_users` con filtro `active = true`
+3. Carga datos relacionados: `companies`, `locals`
+4. Guarda sesión en `localStorage`
+
+#### App Repartidor
+1. Repartidor ingresa username y password
+2. Consulta en `drivers` con filtro `active = true`
+3. Guarda sesión en `localStorage`
+
+#### Panel Admin
+1. Superadmin ingresa email y password
+2. Consulta en `superadmins` con filtro `active = true`
+3. Guarda sesión en `localStorage`
+
+---
+
+## Organización de Estilos
+
+### Estructura de CSS
+```
+styles/
+├── globals.css                   # Estilos globales
+├── layouts/                      # Estilos de layouts
+│   └── CompanyLayout.css
+├── Components/                   # Estilos por componente
+│   ├── CompanyPanel.css
+│   ├── OrderCard.css
+│   ├── Login.css
+│   └── ...
+└── utils/                        # Utilidades CSS
+    └── statusUtils.css           # Estilos de estados
+```
+
+### Responsive Design
+- **Desktop**: Layout completo con sidebar visible
+- **Tablet**: Sidebar colapsable, ajustes de padding
+- **Mobile**: Sidebar como overlay, tabs horizontales, modales desde abajo
+
+---
+
+## Servidor Unificado
+
+### `server.js`
+Servidor Express que sirve ambas aplicaciones web:
+
+- **DeliveryApp**: `http://localhost:3000/`
+- **Panel Admin**: `http://localhost:3000/admin`
+
+### Scripts Disponibles
+```bash
+npm run build:all      # Compila ambas apps web
+npm run start          # Inicia servidor (requiere compilación)
+npm run start:prod     # Compila y inicia servidor
+```
+
+---
+
+## Dependencias Principales
+
+### Compartidas
+- `@supabase/supabase-js`: ^2.87.1
+- `lucide-react`: Iconos
+- `react`: Framework
+- `react-dom`: Renderizado
+
+### App Empresarial
+- `express`: ^4.18.2 (servidor)
+
+### App Repartidor
+- `@capacitor/android`: ^6.0.0
+- `@capacitor/cli`: ^6.0.0
+- `@capacitor/core`: ^6.0.0
+
+---
+
+## Seguridad
+
+### Autenticación
+- Autenticación basada en tablas de Supabase
+- Validación de usuarios activos (`active = true`)
+- Sesiones guardadas en `localStorage`
+
+### Código de Retiro
+- Código único de 6 dígitos por pedido
+- Generado al crear el pedido
+- Validado antes de cambiar estado a "Producto retirado"
+
+---
+
+## Compilación y Despliegue
+
+### App Empresarial
+```bash
+npm run build        # Compila para web
+npm run start        # Servidor de producción
+```
+
+### Panel Admin
+```bash
+cd Paneladmin
+npm run build        # Compila para web
+```
+
+### App Repartidor
+```bash
+cd "App Repartidor"
+npm run build        # Compila para web
+build-apk.bat        # Compila y prepara para APK
+npm run cap:open:android  # Abre Android Studio
+```
+
+---
+
+## Estructura de Archivos Detallada
+
+### App Empresarial (`src/`)
+```
+src/
+├── App.jsx                    # Componente raíz
+├── main.jsx                   # Punto de entrada
+├── components/                # Componentes React
+│   ├── CompanyPanel.jsx
+│   ├── Login.jsx
+│   ├── OrderList.jsx
+│   ├── OrderCard.jsx
+│   ├── OrderDetail.jsx
+│   ├── CreateOrderForm.jsx
+│   ├── ClientManagement.jsx
+│   ├── CreateClientForm.jsx
+│   ├── UserManagement.jsx
+│   ├── CreateUserForm.jsx
+│   ├── LocalSettings.jsx
+│   └── Modal.jsx
+├── layouts/                   # Layouts
+│   └── CompanyLayout.jsx
+├── styles/                     # Estilos CSS
+│   ├── globals.css
+│   ├── layouts/
+│   ├── Components/
+│   └── utils/
+├── types/                      # Tipos y estructuras
+│   ├── order.js
+│   ├── client.js
+│   └── user.js
+└── utils/                      # Utilidades
+    ├── supabase.js
+    ├── utils.js
+    └── mockData.js
+```
+
+### App Repartidor (`App Repartidor/src/`)
+```
+App Repartidor/src/
+├── App.jsx                    # Componente raíz
+├── main.jsx                   # Punto de entrada
+├── components/                # Componentes React
+│   ├── DriverApp.jsx
+│   ├── Login.jsx
+│   ├── DriverSidebar.jsx
+│   ├── OrderList.jsx
+│   ├── OrderCard.jsx
+│   ├── OrderDetail.jsx
+│   ├── PickupCodeModal.jsx
+│   ├── DriverProfile.jsx
+│   ├── DriverWallet.jsx
+│   ├── DriverSettings.jsx
+│   └── Modal.jsx
+├── layouts/                   # Layouts
+│   └── DriverLayout.jsx
+├── styles/                     # Estilos CSS
+│   ├── globals.css
+│   ├── layouts/
+│   ├── Components/
+│   └── utils/
+├── types/                      # Tipos y estructuras
+│   ├── order.js
+│   └── driver.js
+└── utils/                      # Utilidades
+    ├── supabase.js
+    ├── utils.js
+    └── mockData.js
+```
+
+---
+
+## Patrones de Diseño
+
+### Estado Global
+- Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
+- Datos persistentes en `localStorage`
+- Sincronización con Supabase en tiempo real
+
+### Componentes
+- Componentes funcionales con Hooks
+- Separación de responsabilidades
+- Componentes reutilizables (Modal, OrderCard, etc.)
+
+### Estilos
+- CSS Modules por componente
+- Estilos globales centralizados
+- Utilidades CSS compartidas
+
+---
+
+## Notas de Desarrollo
+
+### Convenciones
+- Nombres de componentes en PascalCase
+- Archivos CSS con mismo nombre que componente
+- Funciones helper en `utils/`
+- Tipos y estructuras en `types/`
+
+### Variables de Entorno
+Todas las apps requieren `.env`:
+```env
+VITE_PROJECT_URL=tu_url_supabase
+VITE_ANNON_KEY=tu_anon_key
+```
+
+### Responsive
+- Media queries en todos los componentes
+- Breakpoints: mobile (< 768px), tablet (768px - 1024px), desktop (> 1024px)
+
+---
+
+## Mejoras Futuras
+
+- [ ] Notificaciones push para repartidores
+- [ ] Geolocalización real para asignación de pedidos
+- [ ] Sistema de calificaciones
+- [ ] Chat entre empresa y repartidor
+- [ ] Dashboard con métricas y estadísticas
+- [ ] Exportación de reportes
+- [ ] Multi-idioma (i18n)
+
+---
+
+## Documentación Adicional
+
+- `README_COMPILACION.md`: Guía de compilación
+- `Database/README.md`: Documentación de base de datos
+- `User.md`: Información de usuarios
+
+---
+
+**Última actualización**: 2024
 

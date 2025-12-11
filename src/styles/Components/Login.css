@@ -247,3 +247,72 @@
 	color: #2563eb;
 }
 
+/* Responsive para móvil */
+@media (max-width: 640px) {
+	.login-container {
+		padding: 0.5rem;
+	}
+
+	.login-wrapper {
+		max-width: 100%;
+	}
+
+	.login-form-container {
+		padding: 1.5rem;
+		border-radius: 1rem;
+	}
+
+	.login-title {
+		font-size: 1.5rem;
+	}
+
+	.login-subtitle {
+		font-size: 0.875rem;
+	}
+
+	.login-logo {
+		width: 4rem;
+		height: 4rem;
+	}
+
+	.login-logo svg {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+
+	.login-input {
+		padding: 0.75rem 1rem;
+		font-size: 0.9375rem;
+	}
+
+	.login-button {
+		padding: 0.875rem 0;
+		font-size: 0.9375rem;
+	}
+
+	.quick-login-container {
+		padding: 1rem;
+		border-radius: 1rem;
+	}
+
+	.quick-login-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.quick-login-button {
+		padding: 0.625rem 0.875rem;
+		font-size: 0.8125rem;
+	}
+}
+
+/* Responsive para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+	.login-wrapper {
+		max-width: 32rem;
+	}
+
+	.login-form-container {
+		padding: 2rem;
+	}
+}
+

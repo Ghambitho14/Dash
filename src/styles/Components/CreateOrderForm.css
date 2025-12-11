@@ -279,3 +279,51 @@
 	font-weight: 500;
 }
 
+/* Responsive para móvil */
+@media (max-width: 640px) {
+	.create-order-form {
+		padding: 1rem;
+	}
+
+	.create-order-form-header-content h3 {
+		font-size: 1.125rem;
+	}
+
+	.create-order-form-header-content p {
+		font-size: 0.8125rem;
+	}
+
+	.create-order-form-input {
+		padding: 0.75rem 1rem;
+		font-size: 0.9375rem;
+	}
+
+	.create-order-form-local-grid-3,
+	.create-order-form-local-grid-4,
+	.create-order-form-local-grid-5 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.create-order-form-local-button {
+		font-size: 0.8125rem;
+		padding: 0.5rem;
+	}
+
+	.create-order-form-actions {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.create-order-form-button {
+		width: 100%;
+	}
+}
+
+/* Responsive para tablets */
+@media (min-width: 641px) and (max-width: 1024px) {
+	.create-order-form-local-grid-4,
+	.create-order-form-local-grid-5 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
