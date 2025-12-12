@@ -36,12 +36,41 @@ Aplicación para empresas y administradores locales para gestionar pedidos, clie
 - **Iconos**: Lucide React
 - **Estilos**: CSS Modules
 
-#### Componentes Principales
+#### Arquitectura de Capas
 
-##### Layouts
+La aplicación sigue una arquitectura en capas que separa la lógica de negocio de los componentes:
+
+##### Services (`services/`)
+Capa de servicios que maneja toda la comunicación con Supabase:
+- **`authService.js`**: Autenticación de usuarios empresariales
+- **`orderService.js`**: Operaciones CRUD de pedidos (crear, leer, eliminar, formatear)
+- **`clientService.js`**: Operaciones CRUD de clientes
+- **`userService.js`**: Operaciones CRUD de usuarios empresariales
+- **`localService.js`**: Operaciones CRUD de locales
+
+##### Hooks (`hooks/`)
+Hooks personalizados que encapsulan lógica de estado y efectos:
+- **`useAuth.js`**: Gestión de autenticación (login, logout, estado de usuario)
+- **`useLogin.js`**: Lógica específica del formulario de login
+- **`useOrders.js`**: Gestión de estado y carga de pedidos
+- **`useClients.js`**: Gestión de estado y carga de clientes
+- **`useUsers.js`**: Gestión de estado y carga de usuarios
+- **`useLocals.js`**: Gestión de estado y carga de locales
+- **`useCompanyPanel.js`**: Lógica del panel principal
+- **`useCreateOrderForm.js`**: Lógica del formulario de creación de pedidos
+- **`useCreateClientForm.js`**: Lógica del formulario de creación de clientes
+- **`useCreateUserForm.js`**: Lógica del formulario de creación de usuarios
+- **`useClientManagement.js`**: Lógica de gestión de clientes
+- **`useUserManagement.js`**: Lógica de gestión de usuarios
+- **`useLocalSettings.js`**: Lógica de configuración de locales
+
+##### Componentes (`components/`)
+Componentes React que se enfocan únicamente en la presentación:
+
+###### Layouts
 - **`CompanyLayout.jsx`**: Layout principal con header, sidebar y área de contenido
 
-##### Componentes Core
+###### Componentes Core
 - **`CompanyPanel.jsx`**: Panel principal con gestión de pedidos, clientes y usuarios
 - **`Login.jsx`**: Autenticación de usuarios empresariales
 - **`OrderList.jsx`**: Lista de pedidos con filtros
@@ -187,14 +216,15 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 ## Flujos de Datos
 
 ### Flujo de Creación de Pedido
-1. Usuario empresarial crea pedido en `CreateOrderForm`
-2. Se genera código de retiro único (6 dígitos)
-3. Pedido se guarda en `orders` con estado "Pendiente"
-4. App Repartidor recibe el pedido en tiempo real
-5. Repartidor acepta → Estado cambia a "Asignado"
-6. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
-7. Repartidor ingresa código → Estado cambia a "Producto retirado"
-8. Repartidor entrega → Estado cambia a "Entregado"
+1. Usuario empresarial completa formulario en `CreateOrderForm` (componente)
+2. Hook `useCreateOrderForm` valida datos y genera código de retiro único (6 dígitos)
+3. Servicio `orderService.createOrder` guarda pedido en `orders` con estado "Pendiente"
+4. Hook actualiza estado local y notifica éxito
+5. App Repartidor recibe el pedido en tiempo real (Supabase Realtime)
+6. Repartidor acepta → Estado cambia a "Asignado"
+7. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
+8. Repartidor ingresa código → Estado cambia a "Producto retirado"
+9. Repartidor entrega → Estado cambia a "Entregado"
 
 ### Flujo de Autenticación
 
@@ -213,6 +243,59 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 1. Superadmin ingresa email y password
 2. Consulta en `superadmins` con filtro `active = true`
 3. Guarda sesión en `localStorage`
+
+### Flujo de Datos entre Capas
+
+#### Ejemplo: Crear un Pedido
+
+1. **Componente** (`CreateOrderForm.jsx`):
+   - Usuario completa el formulario
+   - Llama al hook `useCreateOrderForm`
+
+2. **Hook** (`useCreateOrderForm.js`):
+   - Gestiona el estado del formulario
+   - Valida datos
+   - Llama al servicio `createOrder` de `orderService.js`
+
+3. **Servicio** (`orderService.js`):
+   - Formatea los datos al formato de Supabase
+   - Ejecuta la inserción en la base de datos
+   - Formatea la respuesta al formato de la aplicación
+   - Retorna el pedido formateado
+
+4. **Hook** (continúa):
+   - Actualiza el estado local con el nuevo pedido
+   - Notifica al componente del éxito/error
+
+5. **Componente** (continúa):
+   - Muestra mensaje de éxito
+   - Cierra el modal o resetea el formulario
+
+#### Ejemplo: Autenticación
+
+1. **Componente** (`Login.jsx`):
+   - Usuario ingresa credenciales
+   - Llama al hook `useLogin`
+
+2. **Hook** (`useLogin.js`):
+   - Gestiona estado de carga y errores
+   - Llama al hook `useAuth`
+
+3. **Hook** (`useAuth.js`):
+   - Llama al servicio `authenticateUser` de `authService.js`
+
+4. **Servicio** (`authService.js`):
+   - Consulta `company_users` en Supabase
+   - Valida credenciales
+   - Carga datos relacionados (empresa, local)
+   - Retorna usuario formateado
+
+5. **Hook** (`useAuth.js`):
+   - Guarda usuario en estado
+   - Persiste en `localStorage`
+
+6. **Componente** (`Login.jsx`):
+   - Redirige al panel principal
 
 ---
 
@@ -320,7 +403,7 @@ npm run cap:open:android  # Abre Android Studio
 src/
 ├── App.jsx                    # Componente raíz
 ├── main.jsx                   # Punto de entrada
-├── components/                # Componentes React
+├── components/                # Componentes React (presentación)
 │   ├── CompanyPanel.jsx
 │   ├── Login.jsx
 │   ├── OrderList.jsx
@@ -332,22 +415,39 @@ src/
 │   ├── UserManagement.jsx
 │   ├── CreateUserForm.jsx
 │   ├── LocalSettings.jsx
+│   ├── CompanyLayout.jsx
 │   └── Modal.jsx
-├── layouts/                   # Layouts
+├── hooks/                      # Hooks personalizados (lógica de estado)
+│   ├── useAuth.js
+│   ├── useLogin.js
+│   ├── useOrders.js
+│   ├── useClients.js
+│   ├── useUsers.js
+│   ├── useLocals.js
+│   ├── useCompanyPanel.js
+│   ├── useCreateOrderForm.js
+│   ├── useCreateClientForm.js
+│   ├── useCreateUserForm.js
+│   ├── useClientManagement.js
+│   ├── useUserManagement.js
+│   └── useLocalSettings.js
+├── services/                   # Servicios (comunicación con Supabase)
+│   ├── authService.js
+│   ├── orderService.js
+│   ├── clientService.js
+│   ├── userService.js
+│   └── localService.js
+├── layouts/                    # Layouts (deprecado, movido a components/)
 │   └── CompanyLayout.jsx
 ├── styles/                     # Estilos CSS
 │   ├── globals.css
 │   ├── layouts/
 │   ├── Components/
 │   └── utils/
-├── types/                      # Tipos y estructuras
-│   ├── order.js
-│   ├── client.js
-│   └── user.js
+├── types/                      # Tipos y estructuras (reservado para futuro)
 └── utils/                      # Utilidades
     ├── supabase.js
-    ├── utils.js
-    └── mockData.js
+    └── utils.js
 ```
 
 ### App Repartidor (`App Repartidor/src/`)
@@ -387,15 +487,39 @@ App Repartidor/src/
 
 ## Patrones de Diseño
 
+### Arquitectura en Capas
+
+La aplicación sigue una arquitectura en capas que separa claramente las responsabilidades:
+
+1. **Capa de Presentación** (`components/`): Componentes React que solo manejan UI
+2. **Capa de Lógica** (`hooks/`): Hooks personalizados que encapsulan estado y efectos
+3. **Capa de Servicios** (`services/`): Funciones que manejan comunicación con Supabase
+4. **Capa de Utilidades** (`utils/`): Funciones helper y configuración
+
+#### Flujo de Datos
+```
+Componente → Hook → Service → Supabase
+     ↑                           ↓
+     └────────── Estado ─────────┘
+```
+
 ### Estado Global
 - Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
+- Hooks personalizados encapsulan lógica compleja
 - Datos persistentes en `localStorage`
 - Sincronización con Supabase en tiempo real
 
 ### Componentes
 - Componentes funcionales con Hooks
-- Separación de responsabilidades
+- Separación de responsabilidades: UI en componentes, lógica en hooks
 - Componentes reutilizables (Modal, OrderCard, etc.)
+- Los componentes consumen hooks, no servicios directamente
+
+### Servicios
+- Funciones puras que manejan comunicación con Supabase
+- Formateo de datos entre formato BD y formato aplicación
+- Manejo centralizado de errores
+- Reutilizables entre diferentes hooks y componentes
 
 ### Estilos
 - CSS Modules por componente
@@ -409,8 +533,10 @@ App Repartidor/src/
 ### Convenciones
 - Nombres de componentes en PascalCase
 - Archivos CSS con mismo nombre que componente
+- Hooks personalizados con prefijo `use` (ej: `useAuth`, `useOrders`)
+- Servicios con sufijo `Service` (ej: `authService`, `orderService`)
 - Funciones helper en `utils/`
-- Tipos y estructuras en `types/`
+- Tipos y estructuras en `types/` (reservado para futuro uso)
 
 ### Variables de Entorno
 Todas las apps requieren `.env`:

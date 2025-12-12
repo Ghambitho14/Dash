@@ -1,119 +1,33 @@
-import { useState, useEffect, useMemo } from 'react';
 import { X, User, Lock, Store, Shield, Crown } from 'lucide-react';
-// LocalConfig type removed - using plain objects in JavaScript
-import { getRoleName } from '../utils/utils';
+import { useCreateUserForm } from '../hooks/useCreateUserForm';
 import '../styles/Components/CreateUserForm.css';
 
 export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers, initialData }) {
-	const availableLocales = useMemo(() => localConfigs.map(config => config.name), [localConfigs]);
-
-	const [username, setUsername] = useState(initialData?.username || '');
-	const [password, setPassword] = useState('');
-	const [confirmPassword, setConfirmPassword] = useState('');
-	const [name, setName] = useState(initialData?.name || '');
-	const [role, setRole] = useState(initialData?.role || 'local');
-	const [local, setLocal] = useState(initialData?.local || (availableLocales.length > 0 ? availableLocales[0] : undefined));
-	const [errors, setErrors] = useState({});
-
-	useEffect(() => {
-		if (initialData) {
-			setUsername(initialData.username);
-			setPassword('');
-			setConfirmPassword('');
-			setName(initialData.name);
-			setRole(initialData.role);
-			setLocal(initialData.local);
-		} else {
-			setUsername('');
-			setPassword('');
-			setConfirmPassword('');
-			setName('');
-			setRole('local');
-			setLocal(availableLocales.length > 0 ? availableLocales[0] : undefined);
-		}
-		setErrors({});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [initialData?.id, availableLocales.length]);
-
-	const validateForm = () => {
-		const newErrors = {};
-
-		if (!username.trim()) {
-			newErrors.username = 'El usuario es requerido';
-		} else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
-			newErrors.username = 'El usuario solo puede contener letras, números y guiones bajos';
-		} else if (existingUsers.some(u => u.username.toLowerCase() === username.trim().toLowerCase() && (!initialData || u.id !== initialData.id))) {
-			newErrors.username = 'Este usuario ya existe';
-		}
-
-		if (!initialData) {
-			// Solo validar password en creación, no en edición
-			if (!password.trim()) {
-				newErrors.password = 'La contraseña es requerida';
-			} else if (password.length < 6) {
-				newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-			}
-
-			if (!confirmPassword.trim()) {
-				newErrors.confirmPassword = 'Confirma la contraseña';
-			} else if (password !== confirmPassword) {
-				newErrors.confirmPassword = 'Las contraseñas no coinciden';
-			}
-		} else {
-			// En edición, validar password solo si se ingresó
-			if (password.trim() || confirmPassword.trim()) {
-				if (password.length < 6) {
-					newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
-				}
-				if (password !== confirmPassword) {
-					newErrors.confirmPassword = 'Las contraseñas no coinciden';
-				}
-			}
-		}
-
-		if (!name.trim()) {
-			newErrors.name = 'El nombre es requerido';
-		}
-
-		if (role === 'local') {
-			if (availableLocales.length === 0) {
-				newErrors.local = 'Primero debes crear locales en "Configurar Locales"';
-			} else if (!local) {
-				newErrors.local = 'Debes seleccionar un local para usuarios de tipo local';
-			}
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
+	const {
+		username,
+		password,
+		confirmPassword,
+		name,
+		role,
+		local,
+		errors,
+		availableLocales,
+		gridClass,
+		setUsername,
+		setPassword,
+		setConfirmPassword,
+		setName,
+		handleRoleChange,
+		handleLocalChange,
+		clearError,
+		handleSubmit: handleFormSubmit,
+	} = useCreateUserForm(localConfigs, existingUsers, initialData);
 
 	const handleSubmit = (e) => {
-		e.preventDefault();
-		if (validateForm()) {
-			const userData = {
-				username: username.trim(),
-				password: password.trim() || initialData?.password || '',
-				role: role,
-				local: role === 'local' ? local : undefined,
-				name: name.trim(),
-			};
+		const userData = handleFormSubmit(e);
+		if (userData) {
 			onSubmit(userData);
-			if (!initialData) {
-				setUsername('');
-				setPassword('');
-				setConfirmPassword('');
-				setName('');
-				setRole('local');
-				setLocal(availableLocales[0]);
-			}
-			setErrors({});
 		}
-	};
-
-	const getGridClass = () => {
-		if (availableLocales.length <= 3) return 'create-user-form-local-grid-3';
-		if (availableLocales.length <= 4) return 'create-user-form-local-grid-4';
-		return 'create-user-form-local-grid-5';
 	};
 
 	return (
@@ -151,7 +65,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 								value={username}
 								onChange={(e) => {
 									setUsername(e.target.value);
-									if (errors.username) setErrors({ ...errors, username: '' });
+									clearError('username');
 								}}
 								placeholder="Ej: usuario123"
 								className={`create-user-form-input ${errors.username ? 'create-user-form-input-error' : ''}`}
@@ -179,7 +93,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 								value={password}
 								onChange={(e) => {
 									setPassword(e.target.value);
-									if (errors.password) setErrors({ ...errors, password: '' });
+									clearError('password');
 								}}
 								placeholder={initialData ? "Dejar vacío para mantener" : "Mínimo 6 caracteres"}
 								className={`create-user-form-input ${errors.password ? 'create-user-form-input-error' : ''}`}
@@ -202,7 +116,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 								value={confirmPassword}
 								onChange={(e) => {
 									setConfirmPassword(e.target.value);
-									if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+									clearError('confirmPassword');
 								}}
 								placeholder={initialData ? "Dejar vacío para mantener" : "Confirma la contraseña"}
 								className={`create-user-form-input ${errors.confirmPassword ? 'create-user-form-input-error' : ''}`}
@@ -225,7 +139,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 								value={name}
 								onChange={(e) => {
 									setName(e.target.value);
-									if (errors.name) setErrors({ ...errors, name: '' });
+									clearError('name');
 								}}
 								placeholder="Ej: Juan Pérez"
 								className={`create-user-form-input ${errors.name ? 'create-user-form-input-error' : ''}`}
@@ -246,11 +160,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 						<div className="create-user-form-role-buttons create-user-form-role-buttons-3">
 							<button
 								type="button"
-								onClick={() => {
-									setRole('empresarial');
-									setLocal(undefined);
-									if (errors.local) setErrors({ ...errors, local: '' });
-								}}
+								onClick={() => handleRoleChange('empresarial')}
 								className={`create-user-form-role-button ${role === 'empresarial' ? 'create-user-form-role-button-active' : 'create-user-form-role-button-inactive'}`}
 							>
 								<Crown />
@@ -258,11 +168,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 							</button>
 							<button
 								type="button"
-								onClick={() => {
-									setRole('admin');
-									setLocal(undefined);
-									if (errors.local) setErrors({ ...errors, local: '' });
-								}}
+								onClick={() => handleRoleChange('admin')}
 								className={`create-user-form-role-button ${role === 'admin' ? 'create-user-form-role-button-active' : 'create-user-form-role-button-inactive'}`}
 							>
 								<Shield />
@@ -270,10 +176,7 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 							</button>
 							<button
 								type="button"
-								onClick={() => {
-									setRole('local');
-									setLocal(availableLocales.length > 0 ? availableLocales[0] : undefined);
-								}}
+								onClick={() => handleRoleChange('local')}
 								className={`create-user-form-role-button ${role === 'local' ? 'create-user-form-role-button-active' : 'create-user-form-role-button-inactive'}`}
 							>
 								<Store />
@@ -298,15 +201,12 @@ export function CreateUserForm({ onSubmit, onClose, localConfigs, existingUsers,
 								</div>
 							) : (
 								<>
-									<div className={`create-user-form-local-grid ${getGridClass()}`}>
+									<div className={`create-user-form-local-grid ${gridClass}`}>
 										{availableLocales.map((loc) => (
 											<button
 												key={loc}
 												type="button"
-												onClick={() => {
-													setLocal(loc);
-													if (errors.local) setErrors({ ...errors, local: '' });
-												}}
+												onClick={() => handleLocalChange(loc)}
 												className={`create-user-form-local-button ${local === loc ? 'create-user-form-local-button-active' : 'create-user-form-local-button-inactive'}`}
 											>
 												{loc}

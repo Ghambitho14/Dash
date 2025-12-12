@@ -1,85 +1,29 @@
-import { useState, useEffect } from 'react';
 import { X, User, Phone, MapPin, Store } from 'lucide-react';
-// LocalConfig type removed - using plain objects in JavaScript
+import { useCreateClientForm } from '../hooks/useCreateClientForm';
 import '../styles/Components/CreateClientForm.css';
 
 export function CreateClientForm({ onSubmit, onClose, currentUser, localConfigs, initialData }) {
-	const isLocal = currentUser.role === 'local' && currentUser.local;
-	const availableLocales = isLocal 
-		? [currentUser.local]
-		: localConfigs.map(config => config.name);
-	
-	const initialLocal = isLocal ? currentUser.local : (initialData?.local || localConfigs[0]?.name || '');
-
-	const [name, setName] = useState(initialData?.name || '');
-	const [phone, setPhone] = useState(initialData?.phone || '');
-	const [address, setAddress] = useState(initialData?.address || '');
-	const [local, setLocal] = useState(initialData?.local || initialLocal);
-	const [errors, setErrors] = useState({});
-
-	// Actualizar valores cuando cambia initialData (modo edición)
-	useEffect(() => {
-		if (initialData) {
-			setName(initialData.name);
-			setPhone(initialData.phone);
-			setAddress(initialData.address);
-			setLocal(initialData.local);
-		} else {
-			setName('');
-			setPhone('');
-			setAddress('');
-			setLocal(initialLocal);
-		}
-		setErrors({});
-	}, [initialData, initialLocal]);
-
-	const validateForm = () => {
-		const newErrors = {};
-
-		if (!name.trim()) {
-			newErrors.name = 'El nombre es requerido';
-		}
-
-		if (!phone.trim()) {
-			newErrors.phone = 'El teléfono es requerido';
-		} else if (!/^\+?[\d\s-()]+$/.test(phone.trim())) {
-			newErrors.phone = 'El teléfono no es válido';
-		}
-
-		if (!address.trim()) {
-			newErrors.address = 'La dirección es requerida';
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
+	const {
+		name,
+		phone,
+		address,
+		local,
+		errors,
+		isLocal,
+		availableLocales,
+		setName,
+		setPhone,
+		setAddress,
+		setLocal,
+		handlePhoneChange,
+		clearError,
+		handleSubmit: handleFormSubmit,
+	} = useCreateClientForm(currentUser, localConfigs, initialData);
 
 	const handleSubmit = (e) => {
-		e.preventDefault();
-		if (validateForm()) {
-			onSubmit({
-				name: name.trim(),
-				phone: phone.trim(),
-				address: address.trim(),
-				local: local,
-			});
-			// Reset form solo si no es edición
-			if (!initialData) {
-				setName('');
-				setPhone('');
-				setAddress('');
-				setLocal(initialLocal);
-			}
-			setErrors({});
-		}
-	};
-
-	const handlePhoneChange = (value) => {
-		// Permitir solo números, espacios, guiones, paréntesis y el signo +
-		const cleaned = value.replace(/[^\d\s\-()+]/g, '');
-		setPhone(cleaned);
-		if (errors.phone) {
-			setErrors({ ...errors, phone: '' });
+		const clientData = handleFormSubmit(e);
+		if (clientData) {
+			onSubmit(clientData);
 		}
 	};
 
@@ -118,9 +62,7 @@ export function CreateClientForm({ onSubmit, onClose, currentUser, localConfigs,
 								value={name}
 								onChange={(e) => {
 									setName(e.target.value);
-									if (errors.name) {
-										setErrors({ ...errors, name: '' });
-									}
+									clearError('name');
 								}}
 								placeholder="Ej: Juan Pérez"
 								className={`create-client-form-input ${errors.name ? 'create-client-form-input-error' : ''}`}
@@ -164,9 +106,7 @@ export function CreateClientForm({ onSubmit, onClose, currentUser, localConfigs,
 								value={address}
 								onChange={(e) => {
 									setAddress(e.target.value);
-									if (errors.address) {
-										setErrors({ ...errors, address: '' });
-									}
+									clearError('address');
 								}}
 								placeholder="Ej: Av. Principal 123, Santiago"
 								className={`create-client-form-input ${errors.address ? 'create-client-form-input-error' : ''}`}

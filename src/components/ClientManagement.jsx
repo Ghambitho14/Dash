@@ -1,46 +1,26 @@
-import { useState, useMemo } from 'react';
 import { CreateClientForm } from './CreateClientForm';
-// LocalConfig type removed - using plain objects in JavaScript
+import { useClientManagement } from '../hooks/useClientManagement';
 import { X, User as UserIcon, Plus, Edit2, Trash2, Phone, MapPin, Store } from 'lucide-react';
 import '../styles/Components/ClientManagement.css';
 
 export function ClientManagement({ clients, currentUser, localConfigs, onCreateClient, onUpdateClient, onDeleteClient, onClose }) {
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [editingClient, setEditingClient] = useState(null);
-
-	// Filtrar clientes según el local del usuario
-	const filteredClients = useMemo(() => {
-		if (currentUser.role === 'local' && currentUser.local) {
-			return clients.filter(client => client.local === currentUser.local);
-		}
-		// Si es admin, mostrar todos los clientes
-		return clients;
-	}, [clients, currentUser]);
-
-	const handleEdit = (client) => {
-		setEditingClient(client);
-		setShowCreateForm(true);
-	};
+	const {
+		showCreateForm,
+		editingClient,
+		filteredClients,
+		setShowCreateForm,
+		handleEdit,
+		handleDelete: handleDeleteWrapper,
+		handleCreateSubmit: handleCreateSubmitWrapper,
+		handleCreateFormClose,
+	} = useClientManagement(clients, currentUser);
 
 	const handleDelete = (clientId) => {
-		if (window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-			onDeleteClient(clientId);
-		}
+		handleDeleteWrapper(clientId, onDeleteClient);
 	};
 
 	const handleCreateSubmit = (clientData) => {
-		if (editingClient) {
-			onUpdateClient(editingClient.id, clientData);
-			setEditingClient(null);
-		} else {
-			onCreateClient(clientData);
-		}
-		setShowCreateForm(false);
-	};
-
-	const handleCreateFormClose = () => {
-		setShowCreateForm(false);
-		setEditingClient(null);
+		handleCreateSubmitWrapper(clientData, onCreateClient, onUpdateClient);
 	};
 
 	return (

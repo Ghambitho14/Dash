@@ -61,11 +61,13 @@ Sistema de delivery con tres aplicaciones principales:
 ```
 App/
 ├── src/                          # DeliveryApp (App Empresarial) - Solo Web
-│   ├── components/               # Componentes React
-│   ├── layouts/                  # Layouts
+│   ├── components/               # Componentes React (solo UI/presentación)
+│   ├── hooks/                    # Hooks personalizados (lógica de negocio)
+│   ├── services/                 # Servicios de API (comunicación con Supabase)
 │   ├── styles/                   # Estilos CSS
+│   │   └── Components/           # Estilos por componente
+│   ├── utils/                    # Utilidades y helpers
 │   ├── types/                    # Tipos y estructuras
-│   ├── utils/                    # Utilidades
 │   ├── App.jsx                   # Componente raíz
 │   └── main.jsx                  # Punto de entrada
 ├── Paneladmin/                   # Panel Admin - Solo Web
@@ -83,7 +85,17 @@ App/
 - **Ubicación**: `src/`
 - **Puerto**: 5173 (desarrollo)
 - **Propósito**: Gestión de pedidos, clientes, usuarios y locales
-- **Componentes clave**: `CompanyPanel.jsx`, `Login.jsx`, `OrderList.jsx`, `CreateOrderForm.jsx`
+- **Componentes clave**: `CompanyPanel.jsx`, `Login.jsx`, `OrderList.jsx`, `CreateOrderForm.jsx`, `CompanyLayout.jsx`
+- **Hooks personalizados**: 
+  - `useCompanyPanel.js` - Lógica del panel principal
+  - `useLogin.js` - Lógica de autenticación
+  - `useCreateOrderForm.js` - Lógica del formulario de pedidos
+  - `useClientManagement.js` - Lógica de gestión de clientes
+  - `useCreateUserForm.js` - Lógica del formulario de usuarios
+  - `useUserManagement.js` - Lógica de gestión de usuarios
+  - `useLocalSettings.js` - Lógica de configuración de locales
+  - `useCreateClientForm.js` - Lógica del formulario de clientes
+  - `useAuth.js`, `useOrders.js`, `useClients.js`, `useUsers.js`, `useLocals.js` - Hooks de datos
 
 ### 2. Panel Admin
 - **Ubicación**: `Paneladmin/`
@@ -137,9 +149,15 @@ App/
 
 ### Componentes
 - Componentes funcionales con Hooks
-- Separación de responsabilidades
+- **Separación de lógica y presentación**: Los componentes solo manejan UI, la lógica está en hooks personalizados
 - Componentes reutilizables (Modal, OrderCard, etc.)
 - Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
+
+### Arquitectura de Componentes
+- **Componentes (`components/`)**: Solo contienen JSX/HTML y renderizado
+- **Hooks (`hooks/`)**: Contienen toda la lógica de negocio, estado y efectos
+- **Servicios (`services/`)**: Manejan comunicación con API/Supabase
+- **Patrón**: Componente → Hook → Servicio → Supabase
 
 ---
 
@@ -214,6 +232,29 @@ npm run cap:open:android  # Abre Android Studio
 - **Recarga periódica**: Pedidos se recargan automáticamente cada 30 segundos (App Repartidor)
 - **Código de retiro**: Código único de 6 dígitos generado al crear pedido, validado antes de cambiar a "Producto retirado"
 - **Servidor unificado**: `server.js` sirve DeliveryApp en `/` y Panel Admin en `/admin`
+- **Separación de lógica**: Todos los componentes principales tienen su lógica extraída a hooks personalizados en `hooks/`
+- **Estructura simplificada**: La carpeta `layouts/` fue eliminada, `CompanyLayout.jsx` ahora está en `components/`
+
+---
+
+## Hooks Personalizados Disponibles
+
+### Hooks de Lógica de Componentes
+- `useCompanyPanel` - Maneja estado, filtros y acciones del panel principal
+- `useLogin` - Maneja autenticación y validación de credenciales
+- `useCreateOrderForm` - Maneja formulario de creación de pedidos
+- `useClientManagement` - Maneja gestión de clientes
+- `useCreateUserForm` - Maneja formulario de creación/edición de usuarios
+- `useUserManagement` - Maneja gestión de usuarios
+- `useLocalSettings` - Maneja configuración de locales
+- `useCreateClientForm` - Maneja formulario de creación/edición de clientes
+
+### Hooks de Datos
+- `useAuth` - Gestiona autenticación y sesión de usuario
+- `useOrders` - Gestiona pedidos (carga, creación, eliminación)
+- `useClients` - Gestiona clientes (CRUD)
+- `useUsers` - Gestiona usuarios empresariales (CRUD)
+- `useLocals` - Gestiona locales/sucursales (CRUD)
 
 ---
 

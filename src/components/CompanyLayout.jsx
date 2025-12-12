@@ -1,5 +1,5 @@
 import { Building2, LogOut } from 'lucide-react';
-import '../styles/layouts/CompanyLayout.css';
+import '../styles/Components/CompanyLayout.css';
 
 export function CompanyLayout({ children, currentUser, onLogout }) {
 	return (

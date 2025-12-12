@@ -1,123 +1,29 @@
-import { useState, useEffect, useMemo } from 'react';
-import { getLocalAddress } from '../utils/utils';
 import { X, MapPin, Navigation, DollarSign, FileText, Store, User as UserIcon } from 'lucide-react';
+import { useCreateOrderForm } from '../hooks/useCreateOrderForm';
 import '../styles/Components/CreateOrderForm.css';
 
 export function CreateOrderForm({ onSubmit, onCancel, currentUser, localConfigs, clients }) {
-	const isLocal = currentUser.role === 'local' && currentUser.local;
-	const availableLocales = isLocal 
-		? [currentUser.local]
-		: localConfigs.map(config => config.name);
-	
-	const initialLocal = isLocal ? currentUser.local : (localConfigs[0]?.name || '');
-	const initialAddress = getLocalAddress(initialLocal, localConfigs);
-
-	const [formData, setFormData] = useState({
-		clientName: '',
-		selectedClientId: '',
-		pickupAddress: initialAddress,
-		deliveryAddress: '',
-		local: initialLocal,
-		suggestedPrice: '',
-		notes: '',
-	});
-
-	const [showClientDropdown, setShowClientDropdown] = useState(false);
-
-	// Filtrar clientes según búsqueda y local seleccionado
-	const filteredClients = useMemo(() => {
-		// Primero filtrar por local
-		let localFilteredClients = clients.filter(client => client.local === formData.local);
-		
-		// Luego filtrar por búsqueda
-		if (!formData.clientName.trim()) return localFilteredClients;
-		const search = formData.clientName.toLowerCase();
-		return localFilteredClients.filter(client => 
-			client.name.toLowerCase().includes(search) ||
-			client.phone.includes(search) ||
-			client.address.toLowerCase().includes(search)
-		);
-	}, [clients, formData.clientName, formData.local]);
-
-	// Cuando se selecciona un cliente, autocompletar dirección
-	const handleSelectClient = (client) => {
-		setFormData(prev => ({
-			...prev,
-			selectedClientId: client.id,
-			clientName: client.name,
-			deliveryAddress: client.address,
-		}));
-		setShowClientDropdown(false);
-	};
-
-	// Cuando se escribe manualmente, limpiar selección
-	const handleClientNameChange = (value) => {
-		setFormData(prev => ({
-			...prev,
-			clientName: value,
-			selectedClientId: '',
-			// Si se borra el nombre, limpiar también la dirección si fue autocompletada
-			deliveryAddress: prev.selectedClientId ? '' : prev.deliveryAddress,
-		}));
-		setShowClientDropdown(value.trim().length > 0);
-	};
-
-	// Cerrar dropdown al hacer click fuera
-	useEffect(() => {
-		const handleClickOutside = (event) => {
-			const target = event.target;
-			if (!target.closest('.create-order-form-client-wrapper')) {
-				setShowClientDropdown(false);
-			}
-		};
-
-		if (showClientDropdown) {
-			document.addEventListener('mousedown', handleClickOutside);
-			return () => document.removeEventListener('mousedown', handleClickOutside);
-		}
-	}, [showClientDropdown]);
-
-	useEffect(() => {
-		if (isLocal) {
-			setFormData(prev => ({ 
-				...prev, 
-				local: currentUser.local,
-				pickupAddress: getLocalAddress(currentUser.local, localConfigs)
-			}));
-		}
-	}, [isLocal, currentUser.local, localConfigs]);
-
-	const handleLocalChange = (local) => {
-		setFormData(prev => ({ 
-			...prev, 
-			local: local,
-			pickupAddress: getLocalAddress(local, localConfigs)
-		}));
-	};
+	const {
+		formData,
+		showClientDropdown,
+		filteredClients,
+		isLocal,
+		availableLocales,
+		isValid,
+		gridClass,
+		setFormData,
+		setShowClientDropdown,
+		handleSelectClient,
+		handleClientNameChange,
+		handleLocalChange,
+		handleSubmit: handleFormSubmit,
+	} = useCreateOrderForm(currentUser, localConfigs, clients);
 
 	const handleSubmit = (e) => {
-		e.preventDefault();
-		
-		onSubmit({
-			clientName: formData.clientName,
-			selectedClientId: formData.selectedClientId,
-			pickupAddress: formData.pickupAddress,
-			deliveryAddress: formData.deliveryAddress,
-			local: formData.local,
-			suggestedPrice: parseFloat(formData.suggestedPrice),
-			notes: formData.notes || undefined,
-		});
-	};
-
-	const isValid = formData.pickupAddress.trim() !== '' 
-		&& formData.deliveryAddress.trim() !== '' 
-		&& formData.suggestedPrice !== '' 
-		&& parseFloat(formData.suggestedPrice) > 0;
-
-	const getGridClass = () => {
-		if (availableLocales.length <= 3) return 'create-order-form-local-grid-3';
-		if (availableLocales.length <= 4) return 'create-order-form-local-grid-4';
-		return 'create-order-form-local-grid-5';
+		const orderData = handleFormSubmit(e);
+		if (orderData) {
+			onSubmit(orderData);
+		}
 	};
 
 	return (
@@ -230,7 +136,7 @@ export function CreateOrderForm({ onSubmit, onCancel, currentUser, localConfigs,
 							{currentUser.local}
 						</div>
 					) : (
-						<div className={`create-order-form-local-grid ${getGridClass()}`}>
+						<div className={`create-order-form-local-grid ${gridClass}`}>
 							{availableLocales.map((local) => (
 								<button
 									key={local}

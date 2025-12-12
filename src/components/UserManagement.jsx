@@ -1,46 +1,38 @@
-import { useState } from 'react';
 import { CreateUserForm } from './CreateUserForm';
+import { useUserManagement } from '../hooks/useUserManagement';
 import { X, User as UserIcon, Plus, Edit2, Trash2, Shield, Store, Crown } from 'lucide-react';
 import { getRoleName } from '../utils/utils';
 import '../styles/Components/UserManagement.css';
 
 export function UserManagement({ users, onCreateUser, onUpdateUser, onDeleteUser, onClose, localConfigs, currentUser }) {
-	const [showCreateForm, setShowCreateForm] = useState(false);
-	const [editingUser, setEditingUser] = useState(null);
+	const {
+		showCreateForm,
+		editingUser,
+		handleEdit: handleEditWrapper,
+		handleDelete: handleDeleteWrapper,
+		handleCreateSubmit: handleCreateSubmitWrapper,
+		handleCreateFormClose,
+		handleAddNew,
+	} = useUserManagement(currentUser);
 
 	const handleEdit = (user) => {
-		// Prevenir que admin edite CEO
-		if (currentUser.role === 'admin' && user.role === 'empresarial') {
-			alert('No puedes editar el usuario CEO. Solo el CEO puede modificar su propia cuenta.');
-			return;
+		try {
+			handleEditWrapper(user);
+		} catch (err) {
+			alert(err.message);
 		}
-		setEditingUser(user);
-		setShowCreateForm(true);
 	};
 
 	const handleDelete = (userId, userRole) => {
-		if (userRole === 'empresarial') {
-			alert('No se puede eliminar el usuario CEO. Este usuario es esencial para el sistema.');
-			return;
-		}
-		if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-			onDeleteUser(userId);
+		try {
+			handleDeleteWrapper(userId, userRole, onDeleteUser);
+		} catch (err) {
+			alert(err.message);
 		}
 	};
 
 	const handleCreateSubmit = (userData) => {
-		if (editingUser) {
-			onUpdateUser(editingUser.id, userData);
-			setEditingUser(null);
-		} else {
-			onCreateUser(userData);
-		}
-		setShowCreateForm(false);
-	};
-
-	const handleCreateFormClose = () => {
-		setShowCreateForm(false);
-		setEditingUser(null);
+		handleCreateSubmitWrapper(userData, onCreateUser, onUpdateUser);
 	};
 
 	return (
@@ -68,10 +60,7 @@ export function UserManagement({ users, onCreateUser, onUpdateUser, onDeleteUser
 
 					<div className="user-management-actions">
 						<button
-							onClick={() => {
-								setEditingUser(null);
-								setShowCreateForm(true);
-							}}
+							onClick={handleAddNew}
 							className="user-management-button user-management-button-primary"
 						>
 							<Plus />

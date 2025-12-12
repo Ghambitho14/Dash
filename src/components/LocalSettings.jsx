@@ -1,36 +1,18 @@
-import { useState } from 'react';
 import { X, Plus, Trash2, MapPin, Store } from 'lucide-react';
+import { useLocalSettings } from '../hooks/useLocalSettings';
 import '../styles/Components/LocalSettings.css';
 
 export function LocalSettings({ onClose, onSave, initialLocals }) {
-	const [locals, setLocals] = useState(initialLocals);
-
-	const handleAddLocal = () => {
-		const newLocalNumber = locals.length + 1;
-		setLocals([
-			...locals,
-			{
-				name: `Local ${newLocalNumber}`,
-				address: '',
-			},
-		]);
-	};
-
-	const handleDeleteLocal = (index) => {
-		if (window.confirm('¿Estás seguro de que deseas eliminar este local?')) {
-			setLocals(locals.filter((_, i) => i !== index));
-		}
-	};
-
-	const handleUpdateLocal = (index, field, value) => {
-		setLocals(locals.map((local, i) => 
-			i === index ? { ...local, [field]: value } : local
-		));
-	};
+	const {
+		locals,
+		handleAddLocal,
+		handleDeleteLocal,
+		handleUpdateLocal,
+		handleSave: handleSaveWrapper,
+	} = useLocalSettings(initialLocals);
 
 	const handleSave = () => {
-		onSave(locals);
-		onClose();
+		handleSaveWrapper(onSave, onClose);
 	};
 
 	return (
