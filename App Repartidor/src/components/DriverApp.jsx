@@ -7,6 +7,8 @@ import { DriverSettings } from './DriverSettings';
 import { supabase } from '../utils/supabase';
 import { Package, MapPin, CheckCircle } from 'lucide-react';
 import '../styles/Components/DriverApp.css';
+import { validateOrderForTransition } from './orderStateMachine.jsx';
+
 
 export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onViewChange }) {
 	const [selectedOrder, setSelectedOrder] = useState(null);
@@ -68,38 +70,46 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 	};
 
 	// Actualizar el estado de un pedido
-	const handleUpdateStatus = async (orderId, newStatus) => {
-		const order = orders.find(o => o.id === orderId);
-		if (!order) return;
+	// Actualizar el estado de un pedido
+const handleUpdateStatus = async (orderId, newStatus) => {
+	const order = orders.find(o => o.id === orderId);
+	if (!order) return;
 
-		try {
-			// Actualizar estado en Supabase
-			const { error } = await supabase
-				.from('orders')
-				.update({
-					status: newStatus,
-				})
-				.eq('id', order._dbId);
+	// ✅ Validación con máquina de estados (antes de tocar Supabase)
+	const check = validateOrderForTransition(order, newStatus);
+	if (!check.ok) {
+		alert(check.reason);
+		return;
+	}
 
-			if (error) throw error;
+	try {
+		// Actualizar estado en Supabase
+		const { error } = await supabase
+			.from('orders')
+			.update({
+				status: newStatus,
+			})
+			.eq('id', order._dbId);
 
-			// Guardar en historial
-			await supabase
-				.from('order_status_history')
-				.insert({
-					order_id: order._dbId,
-					status: newStatus,
-					driver_id: driverId,
-				});
+		if (error) throw error;
 
-			// Recargar pedidos
-			if (onReloadOrders) {
-				await onReloadOrders();
-			}
-		} catch (err) {
-			alert('Error al actualizar estado: ' + err.message);
+		// Guardar en historial
+		await supabase
+			.from('order_status_history')
+			.insert({
+				order_id: order._dbId,
+				status: newStatus,
+				driver_id: driverId,
+			});
+
+		// Recargar pedidos
+		if (onReloadOrders) {
+			await onReloadOrders();
 		}
-	};
+	} catch (err) {
+		alert('Error al actualizar estado: ' + err.message);
+	}
+};
 
 	// Recargar pedidos cada 30 segundos para mantenerlos actualizados
 	useEffect(() => {
@@ -107,7 +117,7 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 
 		const interval = setInterval(() => {
 			onReloadOrders();
-		}, 30000); // 30 segundos
+		}, 1000); // 1 segundos
 
 		return () => clearInterval(interval);
 	}, [driverId, onReloadOrders]);

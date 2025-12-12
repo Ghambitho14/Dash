@@ -10,8 +10,8 @@ export default function App() {
 	const [driverActiveView, setDriverActiveView] = useState('orders');
 	const [loading, setLoading] = useState(false);
 
-	// Función para formatear un pedido
-	const formatOrder = (order) => {
+	// Función para formatear un pedido (memoizada para evitar re-renders y deps inestables)
+	const formatOrder = useCallback((order) => {
 		return {
 			id: `ORD-${order.id}`,
 			clientName: order.clients?.name || '',
@@ -32,7 +32,7 @@ export default function App() {
 			_dbLocalId: order.local_id,
 			_dbUserId: order.user_id,
 		};
-	};
+	}, []);
 
 	// Cargar pedidos desde Supabase
 	const loadOrders = useCallback(async () => {
@@ -75,13 +75,50 @@ export default function App() {
 		} finally {
 			setLoading(false);
 		}
-	}, [currentDriver]);
+	}, [currentDriver, formatOrder]);
 
 	// Cargar pedidos cuando el driver se loguea
 	useEffect(() => {
 		if (currentDriver) {
 			loadOrders();
 		}
+	}, [currentDriver, loadOrders]);
+
+	// ✅ REALTIME: escuchar cambios en orders SOLO para la company del driver + fallback 60s
+	useEffect(() => {
+		if (!currentDriver) return;
+
+		const companyId = currentDriver.companyId || currentDriver.company_id;
+		if (!companyId) return;
+
+		// Carga inicial (por si entras y no hay datos aún)
+		loadOrders();
+
+		const channel = supabase
+			.channel(`orders-company-${companyId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'orders',
+					filter: `company_id=eq.${companyId}`,
+				},
+				() => {
+					loadOrders();
+				}
+			)
+			.subscribe();
+
+		// Fallback profesional (por si realtime cae / reconexión / lag)
+		const fallback = setInterval(() => {
+			loadOrders();
+		}, 60000);
+
+		return () => {
+			clearInterval(fallback);
+			supabase.removeChannel(channel);
+		};
 	}, [currentDriver, loadOrders]);
 
 	const handleLogin = (driver) => {
@@ -92,6 +129,7 @@ export default function App() {
 
 	const handleLogout = () => {
 		setCurrentDriver(null);
+		setOrders([]);
 		localStorage.removeItem('driver');
 		localStorage.removeItem('orders');
 	};
@@ -110,14 +148,14 @@ export default function App() {
 	}
 
 	return (
-		<DriverLayout 
+		<DriverLayout
 			driverName={currentDriver.name}
 			activeView={driverActiveView}
 			onViewChange={setDriverActiveView}
 			onLogout={handleLogout}
 		>
-			<DriverApp 
-				orders={orders} 
+			<DriverApp
+				orders={orders}
 				setOrders={setOrders}
 				onReloadOrders={loadOrders}
 				activeView={driverActiveView}
@@ -126,4 +164,3 @@ export default function App() {
 		</DriverLayout>
 	);
 }
-

@@ -3,10 +3,12 @@ import { X, MapPin, Navigation, DollarSign, Clock, Package, AlertCircle } from '
 import { getStatusIcon, getNextStatus, formatDate, formatPrice } from '../utils/utils';
 import { PickupCodeModal } from './PickupCodeModal';
 import '../styles/Components/OrderDetail.css';
+import { getPrimaryAction, validateOrderForTransition } from './orderStateMachine.jsx';
+
 
 export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 	const StatusIcon = getStatusIcon(order.status);
-	const nextStatus = getNextStatus(order.status);
+	const action = getPrimaryAction(order);
 	const isAssigned = order.status === 'Asignado';
 	const [timeRemaining, setTimeRemaining] = useState(null);
 	const [showPickupCodeModal, setShowPickupCodeModal] = useState(false);
@@ -42,19 +44,29 @@ export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 		}
 	};
 
-	const handleUpdateStatus = () => {
-		if (onUpdateStatus && nextStatus) {
-			// Si el siguiente estado es "Producto retirado", pedir el código primero
-			if (nextStatus === 'Producto retirado') {
-				setShowPickupCodeModal(true);
-			} else {
-				onUpdateStatus(order.id, nextStatus);
-				setTimeout(() => {
-					onClose();
-				}, 300);
-			}
+			const handleUpdateStatus = () => {
+		if (!onUpdateStatus || !action) return;
+
+		const check = validateOrderForTransition(order, action.toStatus);
+		if (!check.ok) {
+			alert(check.reason);
+			return;
 		}
-	};
+
+		if (action.requiresPickupCode) {
+			setShowPickupCodeModal(true);
+			return;
+		}
+
+		onUpdateStatus(order.id, action.toStatus);
+		setTimeout(() => {
+			onClose();
+		}, 300);
+		};
+
+		const nextStatus = getNextStatus(order.status);
+
+
 
 	const handlePickupCodeConfirm = (code) => {
 		if (code === order.pickupCode) {
@@ -188,22 +200,24 @@ export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 					</>
 				)}
 
-				{order.status !== 'Pendiente' && order.status !== 'Entregado' && nextStatus && (
-					<>
-						<button
-							onClick={onClose}
-							className="order-detail-driver-button order-detail-driver-button-secondary order-detail-driver-button-medium"
-						>
-							Cerrar
-						</button>
-						<button
-							onClick={handleUpdateStatus}
-							className={`order-detail-driver-button ${isAssigned ? 'order-detail-driver-button-orange' : 'order-detail-driver-button-blue'}`}
-						>
-							{nextStatus === 'Entregado' ? 'Entregar pedido' : `Marcar como: ${nextStatus}`}
-						</button>
-					</>
-				)}
+				{order.status !== 'Pendiente' && order.status !== 'Entregado' && action && (
+							<>
+								<button
+								onClick={onClose}
+								className="order-detail-driver-button order-detail-driver-button-secondary order-detail-driver-button-medium"
+								>
+								Cerrar
+								</button>
+
+								<button
+								onClick={handleUpdateStatus}
+								className={`order-detail-driver-button ${isAssigned ? 'order-detail-driver-button-orange' : 'order-detail-driver-button-blue'}`}
+								>
+								{action.label}
+								</button>
+							</>
+							)}
+
 
 				{order.status === 'Entregado' && (
 					<button
