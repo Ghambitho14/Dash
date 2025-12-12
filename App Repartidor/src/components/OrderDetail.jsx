@@ -68,20 +68,22 @@ export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 
 
 
-	const handlePickupCodeConfirm = (code) => {
-		if (code === order.pickupCode) {
-			if (onUpdateStatus && nextStatus) {
-				onUpdateStatus(order.id, nextStatus);
-				setShowPickupCodeModal(false);
-				setTimeout(() => {
-					onClose();
-				}, 300);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	};
+			const handlePickupCodeConfirm = (code) => {
+		// Normaliza ambos a string de 6 dígitos
+		const expected = String(order.pickupCode ?? '').replace(/\D/g, '').padStart(6, '0');
+		const entered  = String(code ?? '').replace(/\D/g, '').padStart(6, '0');
+
+		if (entered !== expected) return false;
+
+		const actionNow = getPrimaryAction(order);
+		if (!actionNow) return false;
+
+		onUpdateStatus(order.id, actionNow.toStatus);
+		setShowPickupCodeModal(false);
+		setTimeout(() => onClose(), 300);
+		return true;
+		};
+
 
 	return (
 		<div className={`order-detail-driver ${isAssigned ? 'order-detail-driver-assigned' : ''}`}>

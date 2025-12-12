@@ -1,172 +1,161 @@
 import { useState } from 'react';
-import { mockDrivers } from '../types/driver';
 import { supabase } from '../utils/supabase';
-import { Bike, Lock, User as UserIcon, LogIn } from 'lucide-react';
+import { Bike, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
 import '../styles/Components/Login.css';
 
 export function Login({ onLogin }) {
-	const [username, setUsername] = useState('');
-	const [password, setPassword] = useState('');
-	const [error, setError] = useState('');
-	const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setError('');
-		setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
 
-		try {
-			// Buscar repartidor en Supabase
-			const { data, error: queryError } = await supabase
-				.from('drivers')
-				.select('*')
-				.eq('username', username)
-				.eq('active', true)
-				.single();
+    setError('');
+    setLoading(true);
 
-			if (queryError) {
-				console.error('Error buscando repartidor:', queryError);
-				setError('Usuario o contraseña incorrectos');
-				setLoading(false);
-				return;
-			}
+    try {
+      const { data, error: queryError } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('username', username)
+        .eq('active', true)
+        .single();
 
-			if (!data) {
-				console.error('Repartidor no encontrado');
-				setError('Usuario o contraseña incorrectos');
-				setLoading(false);
-				return;
-			}
+      if (queryError || !data || data.password !== password) {
+        setError('Usuario o contraseña incorrectos');
+        return;
+      }
 
-			console.log('Repartidor encontrado:', { id: data.id, username: data.username, active: data.active, company_id: data.company_id });
+      const driver = {
+        id: data.id,
+        username: data.username,
+        name: data.name,
+        phone: data.phone || '',
+        email: data.email || '',
+        active: data.active,
+        companyId: data.company_id,
+        company_id: data.company_id,
+      };
 
-			// Verificar contraseña
-			if (data.password !== password) {
-				console.error('Contraseña incorrecta');
-				setError('Usuario o contraseña incorrectos');
-				setLoading(false);
-				return;
-			}
+      onLogin(driver);
+    } catch (err) {
+      console.error(err);
+      setError('Error al iniciar sesión. Intenta nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-			// Formatear driver para la app
-			const driver = {
-				id: data.id,
-				username: data.username,
-				password: data.password,
-				name: data.name,
-				phone: data.phone || '',
-				email: data.email || '',
-				active: data.active,
-				companyId: data.company_id,
-				company_id: data.company_id, // También mantener company_id para compatibilidad
-			};
-
-			console.log('Driver formateado:', driver);
-
-			console.log('Repartidor formateado para login:', driver);
-			onLogin(driver);
-		} catch (err) {
-			setError('Error al iniciar sesión. Intenta nuevamente.');
-			console.error(err);
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleQuickLogin = (driver) => {
-		onLogin(driver);
-	};
-
-	return (
-		<div className="driver-login-container">
-			<div className="driver-login-wrapper">
-				{/* Logo/Header */}
-				<div className="driver-login-header">
-					<div className="driver-login-logo">
-						<Bike />
-					</div>
-					<h1 className="driver-login-title">App Repartidor</h1>
-					<p className="driver-login-subtitle">Inicia sesión para comenzar</p>
-				</div>
-
-				{/* Login Form */}
-				<div className="driver-login-form-container">
-					<form onSubmit={handleSubmit} className="driver-login-form">
-						<div className="driver-login-form-group">
-							<label className="driver-login-label">
-								<div className="driver-login-label-content">
-									<UserIcon />
-									Usuario
-								</div>
-							</label>
-							<input
-								type="text"
-								value={username}
-								onChange={(e) => {
-									setUsername(e.target.value);
-									setError('');
-								}}
-								placeholder="Ingresa tu usuario"
-								className={`driver-login-input ${error ? 'driver-login-input-error' : ''}`}
-								autoComplete="username"
-								required
-							/>
-						</div>
-
-						<div className="driver-login-form-group">
-							<label className="driver-login-label">
-								<div className="driver-login-label-content">
-									<Lock />
-									Contraseña
-								</div>
-							</label>
-							<input
-								type="password"
-								value={password}
-								onChange={(e) => {
-									setPassword(e.target.value);
-									setError('');
-								}}
-								placeholder="Ingresa tu contraseña"
-								className={`driver-login-input ${error ? 'driver-login-input-error' : ''}`}
-								autoComplete="current-password"
-								required
-							/>
-						</div>
-
-						{error && (
-							<div className="driver-login-error">
-								{error}
-							</div>
-						)}
-
-						<button type="submit" className="driver-login-button" disabled={loading}>
-							<LogIn />
-							{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-						</button>
-					</form>
-
-					{/* Quick Login (solo en desarrollo) */}
-					{import.meta.env.DEV && (
-						<div className="driver-login-quick">
-							<p className="driver-login-quick-title">Acceso rápido (solo desarrollo):</p>
-							<div className="driver-login-quick-buttons">
-								{mockDrivers.map((driver) => (
-									<button
-										key={driver.id}
-										type="button"
-										onClick={() => handleQuickLogin(driver)}
-										className="driver-login-quick-button"
-									>
-										{driver.name}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
-				</div>
-			</div>
+  return (
+    <div className="login-container">
+      {/* HEADER */}
+      <header className="login-header">
+		<div className="glass-effect">
+		<div className="light-beam" />
+		<div className="light-beam" />
+		<div className="light-beam" />
+		<div className="floating-light" />
+		<div className="floating-light" />
+		<div className="floating-light" />
+		<div className="floating-light" />
+		<div className="frost-overlay" />
 		</div>
-	);
-}
 
+        <div className="logo-container">
+          <Bike className="logo-icon" />
+        </div>
+
+        <h1 className="header-title">App Repartidor</h1>
+        <p className="header-subtitle">
+          Inicia sesión para comenzar tu jornada
+        </p>
+      </header>
+
+      {/* CARD */}
+      <section className="login-card">
+        <h2 className="card-title">Bienvenido</h2>
+        <p className="card-description">
+          Ingresa tus credenciales para continuar
+        </p>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          {/* Usuario */}
+          <div className="form-group">
+            <label className="form-label">
+              <UserIcon className="label-icon" />
+              Usuario
+            </label>
+            <input
+              type="text"
+              className={`form-input ${error ? 'is-error' : ''}`}
+              placeholder="Ingresa tu usuario"
+              value={username}
+              autoComplete="username"
+              disabled={loading}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setError('');
+              }}
+              required
+            />
+          </div>
+
+          {/* Contraseña */}
+          <div className="form-group">
+            <label className="form-label">
+              <Lock className="label-icon" />
+              Contraseña
+            </label>
+
+            <div className="password-wrapper">
+              <input
+                type="password"
+                className={`form-input password-input ${error ? 'is-error' : ''}`}
+                placeholder="Ingresa tu contraseña"
+                value={password}
+                autoComplete="current-password"
+                disabled={loading}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                required
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="driver-login-error">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="login-button"
+            disabled={loading}
+          >
+            <span className="login-button-content">
+              {loading ? (
+                <>
+                  <span className="login-spinner" />
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  Iniciar sesión
+                  <ArrowRight className="login-arrow-icon" />
+                </>
+              )}
+            </span>
+          </button>
+        </form>
+
+        <div className="safe-area" />
+      </section>
+    </div>
+  );
+}
