@@ -9,12 +9,23 @@ export function useAuth() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
-	const login = useCallback(async (username, password) => {
+	const login = useCallback(async (usernameOrUser, password) => {
 		setLoading(true);
 		setError('');
 
 		try {
-			const user = await authenticateUser(username, password);
+			// Si el primer parámetro es un objeto, es un usuario ya autenticado (quick login)
+			if (typeof usernameOrUser === 'object' && usernameOrUser !== null) {
+				setCurrentUser(usernameOrUser);
+				return usernameOrUser;
+			}
+
+			// Si no, es un username y password (login normal)
+			if (typeof usernameOrUser !== 'string') {
+				throw new Error('Username debe ser un string');
+			}
+
+			const user = await authenticateUser(usernameOrUser, password);
 			setCurrentUser(user);
 			return user;
 		} catch (err) {
