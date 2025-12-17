@@ -1,258 +1,277 @@
-.order-detail-company {
+.detalle-pedido-empresa {
 	padding: 1.5rem;
+	background: var(--app-gray-50);
 }
 
 @media (min-width: 768px) {
-	.order-detail-company {
+	.detalle-pedido-empresa {
 		padding: 2rem;
 	}
 }
 
-.order-detail-company-header {
+.detalle-pedido-empresa-header {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 2rem;
-	padding-bottom: 1.5rem;
-	border-bottom: 1px solid #e5e7eb;
+	margin-bottom: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--app-gray-200);
 }
 
-.order-detail-company-header-main {
+.detalle-pedido-empresa-header-main {
 	flex: 1;
 }
 
-.order-detail-company-header-top {
+.detalle-pedido-empresa-header-top {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: 0.75rem;
-	margin-bottom: 0.5rem;
+	width: 100%;
 }
 
-.order-detail-company-header-icon {
-	width: 3rem;
-	height: 3rem;
-	background-color: #dbeafe;
-	border-radius: 0.75rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+/* Badge de estado - Mismo estilo que OrderCard */
+.delivery-order-status {
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
 }
 
-.order-detail-company-header-icon svg {
-	width: 1.5rem;
-	height: 1.5rem;
-	color: #2563eb;
+.delivery-order-status.pending {
+	background: rgba(245, 158, 11, 0.1);
+	color: var(--app-orange);
 }
 
-.order-detail-company-header-title {
-	font-size: 1.5rem;
-	font-weight: 700;
-	color: #111827;
+.delivery-order-status.in-progress {
+	background: rgba(37, 99, 235, 0.1);
+	color: var(--app-blue-primary);
+}
+
+.delivery-order-status.completed {
+	background: rgba(16, 185, 129, 0.1);
+	color: var(--app-green);
+}
+
+.delivery-order-status.cancelled {
+	background: rgba(239, 68, 68, 0.1);
+	color: var(--app-red);
+}
+
+.detalle-pedido-empresa-header-icon {
+	display: none;
+}
+
+.detalle-pedido-empresa-header-title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--app-gray-800);
 	margin: 0;
 }
 
-.order-detail-company-header-time {
+.detalle-pedido-empresa-header-time {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.875rem;
-	color: #6b7280;
+	gap: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--app-gray-600);
 	margin-top: 0.25rem;
 }
 
-.order-detail-company-header-time svg {
-	width: 1rem;
-	height: 1rem;
+.detalle-pedido-empresa-header-time svg {
+	width: 0.875rem;
+	height: 0.875rem;
+	color: var(--app-gray-500);
 }
 
-.order-detail-company-close {
-	width: 2.25rem;
-	height: 2.25rem;
+.detalle-pedido-empresa-close {
+	width: 2rem;
+	height: 2rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 0.5rem;
 	border: none;
-	background: none;
+	background: var(--app-gray-100);
 	cursor: pointer;
-	transition: background-color 0.15s;
-	color: #9ca3af;
+	transition: all var(--app-transition-base);
+	color: var(--app-gray-600);
 }
 
-.order-detail-company-close:hover {
-	background-color: #f3f4f6;
-	color: #4b5563;
+.detalle-pedido-empresa-close:hover {
+	background: var(--app-gray-200);
+	color: var(--app-gray-800);
 }
 
-.order-detail-company-close svg {
-	width: 1.25rem;
-	height: 1.25rem;
+.detalle-pedido-empresa-close svg {
+	width: 1rem;
+	height: 1rem;
 }
 
-.order-detail-company-content {
+.detalle-pedido-empresa-content {
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
-	margin-bottom: 2rem;
+	margin-bottom: 1.5rem;
 }
 
-.order-detail-company-item {
+.detalle-pedido-empresa-item {
 	display: flex;
 	align-items: center;
-	gap: 1rem;
-	padding: 1.25rem;
-	background-color: white;
-	border: 1px solid #e2e8f0;
-	border-radius: 1rem;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-	transition: all 0.3s ease;
+	gap: 0.75rem;
+	padding: 1rem;
+	background: white;
+	border: 1px solid var(--app-gray-200);
+	border-radius: 0.75rem;
+	transition: all var(--app-transition-base);
 }
 
-.order-detail-company-item:hover {
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-	transform: translateX(4px);
+.detalle-pedido-empresa-item:hover {
+	box-shadow: var(--app-shadow-sm);
+	border-color: var(--app-gray-300);
 }
 
-.order-detail-company-item-start {
+.detalle-pedido-empresa-item-start {
 	align-items: flex-start;
 }
 
-.order-detail-company-item-icon {
-	width: 3rem;
-	height: 3rem;
-	border-radius: 0.75rem;
+.detalle-pedido-empresa-item-icon {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 0.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 	flex-shrink: 0;
+	opacity: 0.1;
 }
 
-.order-detail-company-item-icon-blue {
-	background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+.detalle-pedido-empresa-item-icon-blue {
+	background: var(--app-blue-primary);
 }
 
-.order-detail-company-item-icon-purple {
-	background: linear-gradient(to bottom right, #a855f7, #9333ea);
+.detalle-pedido-empresa-item-icon-purple {
+	background: var(--app-purple);
 }
 
-.order-detail-company-item-icon-gray {
-	background: linear-gradient(to bottom right, #6b7280, #4b5563);
+.detalle-pedido-empresa-item-icon-gray {
+	background: var(--app-gray-600);
 }
 
-.order-detail-company-item-icon-orange {
-	background: linear-gradient(to bottom right, #f97316, #ea580c);
+.detalle-pedido-empresa-item-icon-orange {
+	background: var(--app-orange);
 }
 
-.order-detail-company-item-icon-green {
-	background: linear-gradient(to bottom right, #22c55e, #16a34a);
+.detalle-pedido-empresa-item-icon-green {
+	background: var(--app-green);
 }
 
-.order-detail-company-item-icon svg {
-	width: 1.5rem;
-	height: 1.5rem;
-	color: white;
+.detalle-pedido-empresa-item-icon svg {
+	width: 1rem;
+	height: 1rem;
+	color: currentColor;
+	opacity: 1;
 }
 
-.order-detail-company-item-content {
+.detalle-pedido-empresa-item-content {
 	flex: 1;
 	min-width: 0;
 }
 
-.order-detail-company-item-label {
+.detalle-pedido-empresa-item-label {
 	font-size: 0.75rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.025em;
-	color: #6b7280;
+	font-weight: 500;
+	color: var(--app-gray-600);
 	margin-bottom: 0.25rem;
 }
 
-.order-detail-company-item-value {
-	font-size: 1rem;
+.detalle-pedido-empresa-item-value {
+	font-size: 0.875rem;
 	font-weight: 600;
-	color: #111827;
+	color: var(--app-gray-800);
 	margin: 0;
 }
 
-.order-detail-company-item-text {
-	font-size: 1rem;
-	color: #111827;
-	line-height: 1.625;
+.detalle-pedido-empresa-item-text {
+	font-size: 0.8125rem;
+	color: var(--app-gray-600);
+	line-height: 1.4;
 	margin: 0;
 }
 
-.order-detail-company-item-price {
-	background: linear-gradient(to bottom right, #f0fdf4, #ecfdf5);
-	border: 1px solid #86efac;
+.detalle-pedido-empresa-item-price {
+	background: white;
+	border-color: var(--app-gray-200);
 }
 
-.order-detail-company-item-price-label {
-	color: #15803d;
+.detalle-pedido-empresa-item-price-label {
+	color: var(--app-gray-600);
 }
 
-.order-detail-company-item-price-value {
-	font-size: 1.5rem;
+.detalle-pedido-empresa-item-price-value {
+	font-size: 1.125rem;
 	font-weight: 700;
-	color: #15803d;
+	color: var(--app-gray-800);
 }
 
-.order-detail-company-actions {
+.detalle-pedido-empresa-actions {
 	display: flex;
 	gap: 0.75rem;
 	padding-top: 1rem;
-	border-top: 1px solid #e5e7eb;
+	border-top: 1px solid var(--app-gray-200);
 }
 
-.order-detail-company-button {
+.detalle-pedido-empresa-button {
 	flex: 1;
-	padding: 0.875rem 1.5rem;
-	border-radius: 0.75rem;
+	padding: 0.75rem 1.5rem;
+	border-radius: 0.5rem;
 	border: none;
 	cursor: pointer;
-	transition: all 0.15s;
+	transition: all var(--app-transition-base);
 	font-weight: 600;
-	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	font-size: 0.875rem;
 }
 
-.order-detail-company-button:hover {
-	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+.detalle-pedido-empresa-button:hover {
+	transform: translateY(-1px);
 }
 
-.order-detail-company-button-primary {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.detalle-pedido-empresa-button-primary {
+	background: var(--app-blue-primary);
 	color: white;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	box-shadow: var(--app-shadow-sm);
 }
 
-.order-detail-company-button-primary:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.detalle-pedido-empresa-button-primary:hover {
+	background: var(--app-blue-dark);
+	box-shadow: var(--app-shadow);
 }
 
-.order-detail-company-item-code {
-	background: linear-gradient(to bottom right, #fef3c7, #fde68a);
-	border: 1px solid #fcd34d;
+.detalle-pedido-empresa-item-code {
+	background: white;
+	border-color: var(--app-gray-200);
 }
 
-.order-detail-company-item-icon-yellow {
-	background: linear-gradient(to bottom right, #fbbf24, #f59e0b);
+.detalle-pedido-empresa-item-icon-yellow {
+	background: var(--app-orange);
 }
 
-.order-detail-company-item-code-value {
-	font-size: 1.5rem;
+.detalle-pedido-empresa-item-code-value {
+	font-size: 1rem;
 	font-weight: 700;
-	color: #78350f;
+	color: var(--app-gray-800);
 	letter-spacing: 0.05em;
 }
 
 /* Responsive para móvil */
 @media (max-width: 640px) {
-	.order-detail-company {
+	.detalle-pedido-empresa {
 		padding: 1rem;
 	}
 
-	.order-detail-company-header {
+	.detalle-pedido-empresa-header {
 		flex-direction: column;
 		gap: 1rem;
 		align-items: flex-start;
@@ -260,61 +279,61 @@
 		padding-bottom: 1rem;
 	}
 
-	.order-detail-company-header-title {
+	.detalle-pedido-empresa-header-title {
 		font-size: 1.25rem;
 	}
 
-	.order-detail-company-header-icon {
+	.detalle-pedido-empresa-header-icon {
 		width: 2.5rem;
 		height: 2.5rem;
 	}
 
-	.order-detail-company-header-icon svg {
+	.detalle-pedido-empresa-header-icon svg {
 		width: 1.25rem;
 		height: 1.25rem;
 	}
 
-	.order-detail-company-item {
+	.detalle-pedido-empresa-item {
 		padding: 1rem;
 		flex-direction: column;
 		gap: 0.75rem;
 		align-items: flex-start;
 	}
 
-	.order-detail-company-item-icon {
+	.detalle-pedido-empresa-item-icon {
 		width: 2.5rem;
 		height: 2.5rem;
 	}
 
-	.order-detail-company-item-icon svg {
+	.detalle-pedido-empresa-item-icon svg {
 		width: 1.25rem;
 		height: 1.25rem;
 	}
 
-	.order-detail-company-item-value {
+	.detalle-pedido-empresa-item-value {
 		font-size: 0.9375rem;
 		word-break: break-word;
 	}
 
-	.order-detail-company-item-text {
+	.detalle-pedido-empresa-item-text {
 		font-size: 0.875rem;
 		word-break: break-word;
 	}
 
-	.order-detail-company-item-price-value {
+	.detalle-pedido-empresa-item-price-value {
 		font-size: 1.25rem;
 	}
 
-	.order-detail-company-item-code-value {
+	.detalle-pedido-empresa-item-code-value {
 		font-size: 1.25rem;
 	}
 
-	.order-detail-company-actions {
+	.detalle-pedido-empresa-actions {
 		flex-direction: column;
 		gap: 0.5rem;
 	}
 
-	.order-detail-company-button {
+	.detalle-pedido-empresa-button {
 		width: 100%;
 		padding: 0.75rem 1rem;
 		font-size: 0.9375rem;
@@ -323,7 +342,7 @@
 
 /* Responsive para tablets */
 @media (min-width: 641px) and (max-width: 1024px) {
-	.order-detail-company {
+	.detalle-pedido-empresa {
 		padding: 1.5rem;
 	}
 }

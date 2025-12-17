@@ -1,11 +1,14 @@
 import { supabase } from '../utils/supabase';
+import { hashPassword } from '../utils/passwordUtils';
 
 /**
  * Formatea un usuario de la base de datos al formato de la aplicación
  */
 export function formatUser(user) {
+	// Crear copia sin password por seguridad
+	const { password, ...userWithoutPassword } = user;
 	return {
-		...user,
+		...userWithoutPassword,
 		id: `USR-${user.id}`,
 		local: user.role === 'local' ? user.locals?.name : null,
 		_dbId: user.id,
@@ -37,12 +40,15 @@ export async function loadUsers(companyId) {
  */
 export async function createUser(userData, companyId, localId = null) {
 	try {
+		// Hashear contraseña antes de guardar
+		const hashedPassword = await hashPassword(userData.password);
+		
 		const { data, error } = await supabase
 			.from('company_users')
 			.insert({
 				company_id: companyId,
 				username: userData.username,
-				password: userData.password,
+				password: hashedPassword,
 				role: userData.role,
 				name: userData.name,
 				local_id: localId,
@@ -63,15 +69,21 @@ export async function createUser(userData, companyId, localId = null) {
  */
 export async function updateUser(userDbId, userData, localId = null) {
 	try {
+		const updateData = {
+			username: userData.username,
+			role: userData.role,
+			name: userData.name,
+			local_id: localId,
+		};
+
+		// Solo hashear y actualizar password si se proporcionó una nueva
+		if (userData.password && userData.password.trim()) {
+			updateData.password = await hashPassword(userData.password);
+		}
+
 		const { error } = await supabase
 			.from('company_users')
-			.update({
-				username: userData.username,
-				password: userData.password,
-				role: userData.role,
-				name: userData.name,
-				local_id: localId,
-			})
+			.update(updateData)
 			.eq('id', userDbId);
 
 		if (error) throw error;

@@ -21,9 +21,8 @@ export function useClientManagement(clients, currentUser) {
 	};
 
 	const handleDelete = (clientId, onDeleteClient) => {
-		if (window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-			onDeleteClient(clientId);
-		}
+		// La confirmación se maneja en el componente padre (App.jsx)
+		onDeleteClient(clientId);
 	};
 
 	const handleCreateSubmit = (clientData, onCreateClient, onUpdateClient) => {

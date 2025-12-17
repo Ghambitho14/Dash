@@ -20,9 +20,8 @@ export function useUserManagement(currentUser) {
 		if (userRole === 'empresarial') {
 			throw new Error('No se puede eliminar el usuario CEO. Este usuario es esencial para el sistema.');
 		}
-		if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-			onDeleteUser(userId);
-		}
+		// La confirmación se maneja en el componente padre (App.jsx)
+		onDeleteUser(userId);
 	};
 
 	const handleCreateSubmit = (userData, onCreateUser, onUpdateUser) => {

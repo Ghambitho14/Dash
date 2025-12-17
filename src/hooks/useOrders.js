@@ -38,7 +38,7 @@ export function useOrders(currentUser) {
 
 		const interval = setInterval(() => {
 			fetchOrders();
-		}, 10000); // Cada 10 segundos
+		}, 2000); // Cada 2 segundos
 
 		return () => clearInterval(interval);
 	}, [currentUser, fetchOrders]);

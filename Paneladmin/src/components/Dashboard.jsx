@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Building2, UserPlus, LogOut, Plus, X, Edit2 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
+import { hashPassword } from '../utils/passwordUtils';
 import '../style/Dashboard.css';
 
 export function Dashboard({ admin, onLogout }) {
@@ -73,6 +74,15 @@ export function Dashboard({ admin, onLogout }) {
 		setLoading(true);
 
 		try {
+			// Validar contraseña si se proporciona
+			if (companyForm.password && companyForm.password.trim()) {
+				if (companyForm.password.length < 6) {
+					alert('La contraseña debe tener al menos 6 caracteres');
+					setLoading(false);
+					return;
+				}
+			}
+
 			if (editingCompany) {
 				// Actualizar empresa existente
 				const { data: companyData, error: companyError } = await supabase
@@ -95,7 +105,10 @@ export function Dashboard({ admin, onLogout }) {
 				if (companyForm.username || companyForm.password) {
 					const updateData = {};
 					if (companyForm.username) updateData.username = companyForm.username;
-					if (companyForm.password) updateData.password = companyForm.password;
+					if (companyForm.password && companyForm.password.trim()) {
+						// Hashear contraseña antes de guardar
+						updateData.password = await hashPassword(companyForm.password);
+					}
 
 					const { error: userError } = await supabase
 						.from('company_users')
@@ -132,12 +145,15 @@ export function Dashboard({ admin, onLogout }) {
 
 				// Crear el usuario empresarial para acceder a la app
 				if (companyForm.username && companyForm.password) {
+					// Hashear contraseña antes de guardar
+					const hashedPassword = await hashPassword(companyForm.password);
+					
 					const { data: userData, error: userError } = await supabase
 						.from('company_users')
 						.insert({
 							company_id: companyData.id,
 							username: companyForm.username,
-							password: companyForm.password,
+							password: hashedPassword,
 							role: 'empresarial',
 							name: companyForm.name,
 						})
@@ -181,18 +197,38 @@ export function Dashboard({ admin, onLogout }) {
 		setLoading(true);
 
 		try {
+			// Validar contraseña
+			if (!editingDriver && (!driverForm.password || !driverForm.password.trim())) {
+				alert('La contraseña es requerida');
+				setLoading(false);
+				return;
+			}
+			if (driverForm.password && driverForm.password.trim()) {
+				if (driverForm.password.length < 6) {
+					alert('La contraseña debe tener al menos 6 caracteres');
+					setLoading(false);
+					return;
+				}
+			}
+
 			if (editingDriver) {
 				// Actualizar repartidor existente
+				const updateData = {
+					username: driverForm.username,
+					name: driverForm.name,
+					phone: driverForm.phone,
+					email: driverForm.email || null,
+					company_id: driverForm.company_id || null,
+				};
+
+				// Solo actualizar password si se proporcionó una nueva
+				if (driverForm.password && driverForm.password.trim()) {
+					updateData.password = await hashPassword(driverForm.password);
+				}
+
 				const { data, error } = await supabase
 					.from('drivers')
-					.update({
-						username: driverForm.username,
-						password: driverForm.password,
-						name: driverForm.name,
-						phone: driverForm.phone,
-						email: driverForm.email || null,
-						company_id: driverForm.company_id || null,
-					})
+					.update(updateData)
 					.eq('id', editingDriver.id)
 					.select()
 					.single();
@@ -207,11 +243,14 @@ export function Dashboard({ admin, onLogout }) {
 				setEditingDriver(null);
 			} else {
 				// Crear nuevo repartidor
+				// Hashear contraseña antes de guardar
+				const hashedPassword = await hashPassword(driverForm.password);
+				
 				const { data, error } = await supabase
 					.from('drivers')
 					.insert({
 						username: driverForm.username,
-						password: driverForm.password,
+						password: hashedPassword,
 						name: driverForm.name,
 						phone: driverForm.phone,
 						email: driverForm.email || null,

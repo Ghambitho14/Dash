@@ -18,9 +18,8 @@ export function useLocalSettings(initialLocals) {
 	};
 
 	const handleDeleteLocal = (index) => {
-		if (window.confirm('¿Estás seguro de que deseas eliminar este local?')) {
-			setLocals(locals.filter((_, i) => i !== index));
-		}
+		// La confirmación se maneja en el componente LocalSettings
+		setLocals(locals.filter((_, i) => i !== index));
 	};
 
 	const handleUpdateLocal = (index, field, value) => {

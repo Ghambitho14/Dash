@@ -91,7 +91,8 @@ export function useCreateUserForm(localConfigs, existingUsers, initialData) {
 		if (validateForm()) {
 			const userData = {
 				username: username.trim(),
-				password: password.trim() || initialData?.password || '',
+				// Solo incluir password si se proporcionó una nueva (en texto plano, el servicio la hasheará)
+				password: password.trim() || undefined,
 				role: role,
 				local: role === 'local' ? local : undefined,
 				name: name.trim(),
@@ -139,9 +140,9 @@ export function useCreateUserForm(localConfigs, existingUsers, initialData) {
 	};
 
 	const getGridClass = () => {
-		if (availableLocales.length <= 3) return 'create-user-form-local-grid-3';
-		if (availableLocales.length <= 4) return 'create-user-form-local-grid-4';
-		return 'create-user-form-local-grid-5';
+		if (availableLocales.length <= 3) return 'formulario-crear-usuario-local-grid-3';
+		if (availableLocales.length <= 4) return 'formulario-crear-usuario-local-grid-4';
+		return 'formulario-crear-usuario-local-grid-5';
 	};
 
 	return {

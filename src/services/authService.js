@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase';
+import { verifyPassword } from '../utils/passwordUtils';
 
 /**
  * Autentica un usuario empresarial
@@ -16,8 +17,9 @@ export async function authenticateUser(username, password) {
 			throw new Error('Usuario o contraseña incorrectos');
 		}
 
-		// Verificar contraseña
-		if (data.password !== password) {
+		// Verificar contraseña usando bcrypt
+		const isPasswordValid = await verifyPassword(password, data.password);
+		if (!isPasswordValid) {
 			throw new Error('Usuario o contraseña incorrectos');
 		}
 
@@ -49,11 +51,10 @@ export async function authenticateUser(username, password) {
 			}
 		}
 
-		// Formatear usuario para la app
+		// Formatear usuario para la app (sin incluir password por seguridad)
 		return {
 			id: data.id,
 			username: data.username,
-			password: data.password,
 			name: data.name,
 			role: data.role,
 			companyId: data.company_id,

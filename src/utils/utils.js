@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Truck, Package, CheckCircle2 } from 'lucide-react';
-import '../styles/utils/statusUtils.css';
 
 // ============================================
 // UTILIDADES DE FECHAS
@@ -43,6 +42,17 @@ export function formatRelativeTime(date, currentTime = new Date()) {
 	});
 }
 
+// Obtener iniciales de un nombre
+export function getInitials(name) {
+	if (!name) return '??';
+	return name
+		.split(' ')
+		.map(n => n[0])
+		.join('')
+		.toUpperCase()
+		.slice(0, 2);
+}
+
 // Hook para tiempo en tiempo real
 export function useCurrentTime() {
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -78,17 +88,6 @@ export function generatePickupCode() {
 // UTILIDADES DE ESTADOS
 // ============================================
 
-// Obtener color CSS según estado
-export function getStatusColor(status) {
-	const colors = {
-		'Pendiente': 'status-pendiente',
-		'Asignado': 'status-asignado',
-		'En camino al retiro': 'status-en-camino-al-retiro',
-		'Producto retirado': 'status-producto-retirado',
-		'Entregado': 'status-entregado',
-	};
-	return colors[status] || 'status-default';
-}
 
 // Obtener icono según estado
 export function getStatusIcon(status) {
@@ -102,15 +101,6 @@ export function getStatusIcon(status) {
 	return icons[status] || Clock;
 }
 
-// Obtener siguiente estado
-export function getNextStatus(currentStatus) {
-	const nextStatuses = {
-		'Asignado': 'En camino al retiro',
-		'En camino al retiro': 'Producto retirado',
-		'Producto retirado': 'Entregado',
-	};
-	return nextStatuses[currentStatus] || null;
-}
 
 // Formatear estado para vista de empresa
 export function formatStatusForCompany(status) {
@@ -142,9 +132,6 @@ export function getRoleName(role) {
 // ============================================
 // UTILIDADES DE LOCALES
 // ============================================
-
-// Configuración inicial de locales (vacía, se crean dinámicamente)
-export const defaultLocalConfigs = [];
 
 // Obtener dirección de un local
 export function getLocalAddress(localName, localConfigs) {

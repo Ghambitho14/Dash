@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DriverApp } from './components/DriverApp';
-import { Login } from './components/Login';
+import { DriverApp } from './components/driver/DriverApp';
+import { Login } from './components/auth/Login';
 import { DriverLayout } from './layouts/DriverLayout';
 import { supabase } from './utils/supabase';
 

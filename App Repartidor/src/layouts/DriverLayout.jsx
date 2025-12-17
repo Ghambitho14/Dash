@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Menu, LogOut } from 'lucide-react';
-import { DriverSidebar } from '../components/DriverSidebar';
+import { DriverSidebar } from '../components/driver/DriverSidebar';
 import '../styles/layouts/DriverLayout.css';
 
 export function DriverLayout({ children, driverName, activeView, onViewChange, onLogout }) {

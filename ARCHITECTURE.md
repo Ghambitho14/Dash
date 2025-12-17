@@ -159,10 +159,12 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 - **`Modal.jsx`**: Componente modal reutilizable
 
 #### Funcionalidades Especiales
+- **Supabase Realtime**: Escucha cambios en tiempo real en la tabla `orders` (implementado)
 - **Timeout automático**: Pedidos "Asignado" se revierten a "Pendiente" si no se actualizan en 1 minuto
-- **Recarga periódica**: Pedidos se recargan automáticamente cada 30 segundos
+- **Recarga periódica**: Fallback de 60 segundos si Realtime falla (polling de 1 segundo como redundancia)
 - **Historial de estados**: Cada cambio se registra en `order_status_history`
 - **Vista de completados**: Los repartidores pueden ver sus pedidos entregados
+- **Máquina de estados**: Validación de transiciones de estado mediante `orderStateMachine.jsx`
 
 #### Compilación APK
 - **Configuración**: `capacitor.config.json`
@@ -220,11 +222,12 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 2. Hook `useCreateOrderForm` valida datos y genera código de retiro único (6 dígitos)
 3. Servicio `orderService.createOrder` guarda pedido en `orders` con estado "Pendiente"
 4. Hook actualiza estado local y notifica éxito
-5. App Repartidor recibe el pedido en tiempo real (Supabase Realtime)
-6. Repartidor acepta → Estado cambia a "Asignado"
-7. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
-8. Repartidor ingresa código → Estado cambia a "Producto retirado"
-9. Repartidor entrega → Estado cambia a "Entregado"
+5. **App Repartidor recibe el pedido en tiempo real** (Supabase Realtime - implementado)
+6. **DeliveryApp actualiza pedidos** (polling cada 2 segundos - se recomienda implementar Realtime)
+7. Repartidor acepta → Estado cambia a "Asignado" (validado por máquina de estados)
+8. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
+9. Repartidor ingresa código → Estado cambia a "Producto retirado" (código validado)
+10. Repartidor entrega → Estado cambia a "Entregado"
 
 ### Flujo de Autenticación
 
@@ -365,10 +368,16 @@ npm run start:prod     # Compila y inicia servidor
 - Validación de usuarios activos (`active = true`)
 - Sesiones guardadas en `localStorage`
 
+**⚠️ IMPORTANTE - Seguridad de Contraseñas**:
+- Actualmente las contraseñas se almacenan en texto plano en la base de datos
+- **Se recomienda implementar hashing de contraseñas (bcrypt) antes de producción**
+- Ver `MEJORAS.md` para detalles sobre implementación de seguridad
+
 ### Código de Retiro
 - Código único de 6 dígitos por pedido
 - Generado al crear el pedido
 - Validado antes de cambiar estado a "Producto retirado"
+- Validación mediante máquina de estados (`orderStateMachine.jsx`)
 
 ---
 
@@ -507,7 +516,10 @@ Componente → Hook → Service → Supabase
 - Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
 - Hooks personalizados encapsulan lógica compleja
 - Datos persistentes en `localStorage`
-- Sincronización con Supabase en tiempo real
+- **Sincronización con Supabase**:
+  - **App Repartidor**: Implementa Supabase Realtime + fallback de 60s
+  - **DeliveryApp**: Usa polling cada 2 segundos (se recomienda implementar Realtime)
+  - Ver `MEJORAS.md` para optimizaciones de performance
 
 ### Componentes
 - Componentes funcionales con Hooks
@@ -518,8 +530,9 @@ Componente → Hook → Service → Supabase
 ### Servicios
 - Funciones puras que manejan comunicación con Supabase
 - Formateo de datos entre formato BD y formato aplicación
-- Manejo centralizado de errores
+- Manejo de errores (actualmente inconsistente - ver `MEJORAS.md`)
 - Reutilizables entre diferentes hooks y componentes
+- **Nota**: Algunos servicios usan `console.error` directamente - se recomienda centralizar logging
 
 ### Estilos
 - CSS Modules por componente
@@ -551,8 +564,41 @@ VITE_ANNON_KEY=tu_anon_key
 
 ---
 
+## Sincronización en Tiempo Real
+
+### App Repartidor
+- **Implementado**: Supabase Realtime para cambios en `orders`
+- Canal: `orders-company-{companyId}`
+- Fallback: Polling cada 60 segundos si Realtime falla
+- Polling adicional: Cada 1 segundo como redundancia (se recomienda optimizar)
+
+### DeliveryApp
+- **No implementado**: Actualmente usa polling cada 2 segundos
+- **Recomendación**: Implementar Supabase Realtime similar a App Repartidor
+- Ver `MEJORAS.md` sección "Performance" para detalles
+
+---
+
+## Manejo de Errores
+
+### Estado Actual
+- Mezcla de `alert()`, `console.error()`, y `toast` (react-hot-toast)
+- Algunos errores solo se muestran en consola
+- No hay manejo centralizado de errores
+- No hay Error Boundaries de React
+
+### Archivos con Manejo de Errores
+- `src/App.jsx`: Usa `toast` correctamente
+- `App Repartidor/src/components/DriverApp.jsx`: Usa `alert()`
+- `App Repartidor/src/App.jsx`: Usa `alert()`
+
+**Recomendación**: Estandarizar manejo de errores. Ver `MEJORAS.md` sección "Código y Arquitectura".
+
+---
+
 ## Mejoras Futuras
 
+### Funcionalidades
 - [ ] Notificaciones push para repartidores
 - [ ] Geolocalización real para asignación de pedidos
 - [ ] Sistema de calificaciones
@@ -561,15 +607,46 @@ VITE_ANNON_KEY=tu_anon_key
 - [ ] Exportación de reportes
 - [ ] Multi-idioma (i18n)
 
+### Técnicas (Ver `MEJORAS.md` para detalles completos)
+- [ ] Implementar hashing de contraseñas (CRÍTICO)
+- [ ] Implementar Supabase Realtime en DeliveryApp
+- [ ] Optimizar componentes React (React.memo, useMemo)
+- [ ] Estandarizar manejo de errores
+- [ ] Eliminar console.logs de producción
+- [ ] Implementar Error Boundaries
+- [ ] Agregar validaciones robustas en formularios
+- [ ] Implementar testing (unitario, integración, E2E)
+- [ ] Migrar gradualmente a TypeScript
+
 ---
 
 ## Documentación Adicional
 
-- `README_COMPILACION.md`: Guía de compilación
+- `MEJORAS.md`: Análisis completo de áreas de mejora y plan de acción
+- `AGENTS.MD`: Guía para agentes de IA trabajando en el proyecto
 - `Database/README.md`: Documentación de base de datos
-- `User.md`: Información de usuarios
+- `README.md`: Documentación general del proyecto
 
 ---
 
-**Última actualización**: 2024
+## Áreas de Mejora Conocidas
+
+### 🔴 Crítico
+1. **Seguridad de contraseñas**: Implementar hashing (bcrypt) antes de producción
+2. **Exposición de contraseñas**: Eliminar password de objetos de usuario retornados
+
+### 🟠 Alta Prioridad
+3. **Performance**: Implementar Supabase Realtime en DeliveryApp (actualmente usa polling cada 2s)
+4. **Optimización React**: Agregar memoización (React.memo, useMemo, useCallback)
+
+### 🟡 Media Prioridad
+5. **Manejo de errores**: Estandarizar (eliminar alert(), usar toast consistentemente)
+6. **Logging**: Eliminar console.logs de producción, crear logger condicional
+7. **Validaciones**: Agregar validaciones robustas en formularios
+
+**Ver `MEJORAS.md` para análisis completo con ubicaciones exactas, soluciones y plan de acción detallado.**
+
+---
+
+**Última actualización**: Diciembre 2024
 

@@ -10,13 +10,35 @@ export function useLogin(onLogin) {
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 
+	const validateInputs = () => {
+		if (!username.trim()) {
+			setError('El usuario es requerido');
+			return false;
+		}
+		if (!password.trim()) {
+			setError('La contraseña es requerida');
+			return false;
+		}
+		if (password.length < 6) {
+			setError('La contraseña debe tener al menos 6 caracteres');
+			return false;
+		}
+		return true;
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setError('');
+
+		// Validar entradas
+		if (!validateInputs()) {
+			return;
+		}
+
 		setLoading(true);
 
 		try {
-			const user = await authenticateUser(username, password);
+			const user = await authenticateUser(username.trim(), password);
 			onLogin(user);
 		} catch (err) {
 			setError(err.message || 'Error al iniciar sesión. Intenta nuevamente.');
@@ -24,10 +46,6 @@ export function useLogin(onLogin) {
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	const handleQuickLogin = (user) => {
-		onLogin(user);
 	};
 
 	return {
@@ -38,7 +56,6 @@ export function useLogin(onLogin) {
 		setUsername,
 		setPassword,
 		handleSubmit,
-		handleQuickLogin,
 	};
 }
 

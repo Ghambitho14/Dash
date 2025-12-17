@@ -66,7 +66,7 @@ export function useCreateOrderForm(currentUser, localConfigs, clients) {
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			const target = event.target;
-			if (!target.closest('.create-order-form-client-wrapper')) {
+			if (!target.closest('.formulario-crear-pedido-client-wrapper')) {
 				setShowClientDropdown(false);
 			}
 		};
@@ -115,9 +115,9 @@ export function useCreateOrderForm(currentUser, localConfigs, clients) {
 		&& parseFloat(formData.suggestedPrice) > 0;
 
 	const getGridClass = () => {
-		if (availableLocales.length <= 3) return 'create-order-form-local-grid-3';
-		if (availableLocales.length <= 4) return 'create-order-form-local-grid-4';
-		return 'create-order-form-local-grid-5';
+		if (availableLocales.length <= 3) return 'formulario-crear-pedido-local-grid-3';
+		if (availableLocales.length <= 4) return 'formulario-crear-pedido-local-grid-4';
+		return 'formulario-crear-pedido-local-grid-5';
 	};
 
 	return {

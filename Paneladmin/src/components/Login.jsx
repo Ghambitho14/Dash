@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogIn, Lock, Mail } from 'lucide-react';
 import { supabase } from '../utils/supabase';
+import { verifyPassword } from '../utils/passwordUtils';
 import '../style/Login.css';
 
 export function Login({ onLogin }) {
@@ -9,9 +10,35 @@ export function Login({ onLogin }) {
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 
+	const validateInputs = () => {
+		if (!email.trim()) {
+			setError('El correo electrónico es requerido');
+			return false;
+		}
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+			setError('El correo electrónico no es válido');
+			return false;
+		}
+		if (!password.trim()) {
+			setError('La contraseña es requerida');
+			return false;
+		}
+		if (password.length < 6) {
+			setError('La contraseña debe tener al menos 6 caracteres');
+			return false;
+		}
+		return true;
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setError('');
+
+		// Validar entradas
+		if (!validateInputs()) {
+			return;
+		}
+
 		setLoading(true);
 
 		try {
@@ -19,7 +46,7 @@ export function Login({ onLogin }) {
 			const { data, error: queryError } = await supabase
 				.from('superadmins')
 				.select('*')
-				.eq('email', email)
+				.eq('email', email.trim())
 				.eq('active', true)
 				.single();
 
@@ -29,15 +56,17 @@ export function Login({ onLogin }) {
 				return;
 			}
 
-			// Verificar contraseña (en producción debería estar hasheada)
-			if (data.password !== password) {
+			// Verificar contraseña usando bcrypt
+			const isPasswordValid = await verifyPassword(password, data.password);
+			if (!isPasswordValid) {
 				setError('Credenciales incorrectas');
 				setLoading(false);
 				return;
 			}
 
-			// Login exitoso
-			onLogin(data);
+			// Login exitoso - crear objeto sin password
+			const { password: _, ...adminWithoutPassword } = data;
+			onLogin(adminWithoutPassword);
 		} catch (err) {
 			setError('Error al iniciar sesión. Intenta nuevamente.');
 			console.error(err);

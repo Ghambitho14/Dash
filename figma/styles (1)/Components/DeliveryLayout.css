@@ -1,0 +1,38 @@
+/* ====================================
+   DELIVERY APP - LAYOUT PRINCIPAL
+   ==================================== */
+
+.delivery-app {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--app-blue-primary) 0%, var(--app-blue-dark) 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.delivery-container {
+  flex: 1;
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  overflow: hidden;
+}
+
+/* ====================================
+   RESPONSIVE
+   ==================================== */
+@media (max-width: 1024px) {
+  .delivery-container {
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .delivery-container {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
+}

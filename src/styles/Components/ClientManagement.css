@@ -1,4 +1,8 @@
-.client-management-overlay {
+/* ====================================
+   GESTIÓN DE CLIENTES
+   ==================================== */
+
+.gestion-clientes-overlay {
 	position: fixed;
 	top: 0;
 	right: 0;
@@ -23,16 +27,16 @@
 	}
 }
 
-.client-management-content {
+.gestion-clientes-content {
 	background-color: white;
-	border-radius: 1.5rem;
+	border-radius: 1rem;
 	width: 100%;
 	max-width: 42rem;
 	max-height: 90vh;
 	overflow-y: auto;
-	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 	animation: slideUp 0.3s ease;
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid var(--app-gray-200);
 	display: flex;
 	flex-direction: column;
 }
@@ -48,126 +52,167 @@
 	}
 }
 
-.client-management-header {
+.gestion-clientes-content::-webkit-scrollbar {
+	width: 0.5rem;
+}
+
+.gestion-clientes-content::-webkit-scrollbar-track {
+	background: var(--app-gray-100);
+	border-radius: 0.25rem;
+}
+
+.gestion-clientes-content::-webkit-scrollbar-thumb {
+	background: var(--app-gray-300);
+	border-radius: 0.25rem;
+}
+
+.gestion-clientes-content::-webkit-scrollbar-thumb:hover {
+	background: var(--app-gray-400);
+}
+
+/* Header */
+.gestion-clientes-header {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
-	padding: 1.5rem;
+	padding: 2rem;
 	padding-bottom: 1rem;
-	border-bottom: 1px solid #e5e7eb;
+	border-bottom: 1px solid var(--app-gray-200);
 	flex-shrink: 0;
 }
 
-.client-management-header-content {
+.gestion-clientes-header-content {
 	display: flex;
 	align-items: flex-start;
 	gap: 1rem;
 	flex: 1;
 }
 
-.client-management-header-icon {
+.gestion-clientes-header-icon {
 	width: 3rem;
 	height: 3rem;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: var(--app-green);
 	border-radius: 0.75rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 	flex-shrink: 0;
 }
 
-.client-management-header-icon svg {
+.gestion-clientes-header-icon svg {
 	width: 1.5rem;
 	height: 1.5rem;
 	color: white;
 }
 
-.client-management-title {
+.gestion-clientes-title {
 	font-size: 1.5rem;
 	font-weight: 700;
-	color: #111827;
+	color: var(--app-gray-800);
 	margin: 0 0 0.25rem 0;
 }
 
-.client-management-subtitle {
+.gestion-clientes-subtitle {
 	font-size: 0.875rem;
-	color: #6b7280;
+	color: var(--app-gray-600);
 	margin: 0;
 }
 
-.client-management-close {
-	width: 2.25rem;
-	height: 2.25rem;
+.gestion-clientes-close {
+	width: 2.5rem;
+	height: 2.5rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	border-radius: 0.5rem;
 	border: none;
-	background: none;
+	background: var(--app-gray-100);
 	cursor: pointer;
-	transition: background-color 0.15s;
-	color: #9ca3af;
+	transition: all var(--app-transition-base);
+	color: var(--app-gray-600);
 	flex-shrink: 0;
 }
 
-.client-management-close:hover {
-	background-color: #f3f4f6;
-	color: #4b5563;
+.gestion-clientes-close:hover {
+	background: var(--app-gray-200);
+	color: var(--app-gray-800);
 }
 
-.client-management-close svg {
+.gestion-clientes-close svg {
 	width: 1.25rem;
 	height: 1.25rem;
 }
 
-.client-management-actions {
-	padding: 1rem 1.5rem;
-	border-bottom: 1px solid #e5e7eb;
+/* Actions */
+.gestion-clientes-actions {
+	padding: 1.5rem 2rem;
+	border-bottom: 1px solid var(--app-gray-200);
 	flex-shrink: 0;
 }
 
-.client-management-button {
+.gestion-clientes-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5rem;
 	padding: 0.75rem 1.5rem;
-	border-radius: 0.75rem;
+	border-radius: 0.5rem;
 	border: none;
 	cursor: pointer;
-	transition: all 0.15s;
-	font-weight: 600;
+	transition: all var(--app-transition-base);
+	font-weight: 500;
 	font-size: 0.875rem;
 	width: 100%;
 }
 
-.client-management-button svg {
+.gestion-clientes-button svg {
 	width: 1.25rem;
 	height: 1.25rem;
 }
 
-.client-management-button-add {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.gestion-clientes-button-add {
+	background: var(--app-green);
 	color: white;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.client-management-button-add:hover {
+.gestion-clientes-button-add:hover {
+	background: #059669;
 	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+	box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
-.client-management-list {
+/* List */
+.gestion-clientes-list {
 	flex: 1;
 	overflow-y: auto;
-	padding: 1rem 1.5rem;
+	padding: 1.5rem 2rem;
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: 1rem;
 }
 
-.client-management-empty {
+.gestion-clientes-list::-webkit-scrollbar {
+	width: 0.5rem;
+}
+
+.gestion-clientes-list::-webkit-scrollbar-track {
+	background: var(--app-gray-100);
+	border-radius: 0.25rem;
+}
+
+.gestion-clientes-list::-webkit-scrollbar-thumb {
+	background: var(--app-gray-300);
+	border-radius: 0.25rem;
+}
+
+.gestion-clientes-list::-webkit-scrollbar-thumb:hover {
+	background: var(--app-gray-400);
+}
+
+/* Empty State */
+.gestion-clientes-empty {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -176,44 +221,45 @@
 	text-align: center;
 }
 
-.client-management-empty-icon {
+.gestion-clientes-empty-icon {
 	width: 4rem;
 	height: 4rem;
-	color: #9ca3af;
+	color: var(--app-gray-400);
 	margin-bottom: 1rem;
 }
 
-.client-management-empty-text {
+.gestion-clientes-empty-text {
 	font-size: 1rem;
 	font-weight: 600;
-	color: #111827;
+	color: var(--app-gray-800);
 	margin: 0 0 0.25rem 0;
 }
 
-.client-management-empty-subtext {
+.gestion-clientes-empty-subtext {
 	font-size: 0.875rem;
-	color: #6b7280;
+	color: var(--app-gray-600);
 	margin: 0;
 }
 
-.client-management-item {
+/* Item */
+.gestion-clientes-item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 1rem;
-	background-color: #f9fafb;
-	border: 1px solid #e5e7eb;
+	padding: 1.25rem;
+	background: white;
+	border: 1px solid var(--app-gray-200);
 	border-radius: 0.75rem;
-	transition: all 0.15s;
+	transition: all var(--app-transition-base);
 }
 
-.client-management-item:hover {
-	background-color: white;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-	border-color: #d1d5db;
+.gestion-clientes-item:hover {
+	box-shadow: var(--app-shadow);
+	border-color: var(--app-gray-300);
+	transform: translateY(-2px);
 }
 
-.client-management-item-content {
+.gestion-clientes-item-content {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
@@ -221,64 +267,66 @@
 	min-width: 0;
 }
 
-.client-management-item-avatar {
+.gestion-clientes-item-avatar {
 	width: 3rem;
 	height: 3rem;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: var(--app-green);
 	border-radius: 0.75rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 	flex-shrink: 0;
 }
 
-.client-management-item-avatar svg {
+.gestion-clientes-item-avatar svg {
 	width: 1.5rem;
 	height: 1.5rem;
 	color: white;
 }
 
-.client-management-item-info {
+.gestion-clientes-item-info {
 	flex: 1;
 	min-width: 0;
 }
 
-.client-management-item-name {
+.gestion-clientes-item-name {
 	font-size: 1rem;
 	font-weight: 600;
-	color: #111827;
+	color: var(--app-gray-800);
 	margin: 0 0 0.5rem 0;
 }
 
-.client-management-item-details {
+.gestion-clientes-item-details {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: 0.375rem;
 }
 
-.client-management-item-detail {
+.gestion-clientes-item-detail {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
 	font-size: 0.875rem;
-	color: #6b7280;
+	color: var(--app-gray-600);
 }
 
-.client-management-item-detail svg {
+.gestion-clientes-item-detail svg {
 	width: 1rem;
 	height: 1rem;
 	flex-shrink: 0;
+	color: var(--app-gray-500);
 }
 
-.client-management-item-actions {
+/* Item Actions */
+.gestion-clientes-item-actions {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
 	flex-shrink: 0;
 }
 
-.client-management-item-button {
+.gestion-clientes-item-button {
 	width: 2.5rem;
 	height: 2.5rem;
 	display: flex;
@@ -287,53 +335,65 @@
 	border-radius: 0.5rem;
 	border: none;
 	cursor: pointer;
-	transition: all 0.15s;
+	transition: all var(--app-transition-base);
 }
 
-.client-management-item-button svg {
+.gestion-clientes-item-button svg {
 	width: 1.25rem;
 	height: 1.25rem;
 }
 
-.client-management-item-button-edit {
-	background-color: #eff6ff;
-	color: #2563eb;
+.gestion-clientes-item-button-edit {
+	background-color: rgba(37, 99, 235, 0.1);
+	color: var(--app-blue-primary);
 }
 
-.client-management-item-button-edit:hover {
-	background-color: #dbeafe;
+.gestion-clientes-item-button-edit:hover {
+	background-color: rgba(37, 99, 235, 0.2);
 }
 
-.client-management-item-button-delete {
-	background-color: #fef2f2;
-	color: #dc2626;
+.gestion-clientes-item-button-delete {
+	background-color: rgba(239, 68, 68, 0.1);
+	color: var(--app-red);
 }
 
-.client-management-item-button-delete:hover {
-	background-color: #fee2e2;
+.gestion-clientes-item-button-delete:hover {
+	background-color: rgba(239, 68, 68, 0.2);
 }
 
+/* Responsive */
 @media (max-width: 640px) {
-	.client-management-overlay {
+	.gestion-clientes-overlay {
 		padding: 0;
 		align-items: flex-end;
 	}
 
-	.client-management-content {
+	.gestion-clientes-content {
 		border-radius: 1rem 1rem 0 0;
 		max-height: 95vh;
 		border-bottom: none;
 	}
 
-	.client-management-item {
+	.gestion-clientes-header {
+		padding: 1.5rem;
+	}
+
+	.gestion-clientes-actions {
+		padding: 1rem 1.5rem;
+	}
+
+	.gestion-clientes-list {
+		padding: 1rem 1.5rem;
+	}
+
+	.gestion-clientes-item {
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 1rem;
 	}
 
-	.client-management-item-actions {
+	.gestion-clientes-item-actions {
 		width: 100%;
 		justify-content: flex-end;
 	}
 }
-

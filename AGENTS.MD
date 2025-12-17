@@ -143,9 +143,11 @@ App/
 
 ### Estilos
 - CSS Modules por componente
-- Estilos globales en `styles/globals.css`
+- Estilos globales en `styles/globals.css` (mantener limpio, eliminar variables no usadas)
 - Utilidades CSS en `styles/utils/`
 - Responsive: mobile (< 768px), tablet (768px - 1024px), desktop (> 1024px)
+- **Login**: Diseño actualizado desde Figma con layout de dos columnas (ilustración + formulario)
+- Usar unidades `rem` para mejor escalabilidad (1rem = 16px por defecto)
 
 ### Componentes
 - Componentes funcionales con Hooks
@@ -178,6 +180,7 @@ App/
 - **App Repartidor**: Consulta `drivers` con `active = true`
 - **Panel Admin**: Consulta `superadmins` con `active = true`
 - Sesiones guardadas en `localStorage`
+- **IMPORTANTE**: NO existe funcionalidad de "quick-login" o "acceso rápido" - fue eliminada completamente
 
 ---
 
@@ -234,6 +237,8 @@ npm run cap:open:android  # Abre Android Studio
 - **Servidor unificado**: `server.js` sirve DeliveryApp en `/` y Panel Admin en `/admin`
 - **Separación de lógica**: Todos los componentes principales tienen su lógica extraída a hooks personalizados en `hooks/`
 - **Estructura simplificada**: La carpeta `layouts/` fue eliminada, `CompanyLayout.jsx` ahora está en `components/`
+- **Quick-Login eliminado**: La funcionalidad de acceso rápido para desarrollo fue completamente removida de `Login.jsx` y `useLogin.js`
+- **Limpieza de estilos**: `globals.css` fue limpiado de variables CSS no utilizadas y temas no usados (como `.dark`)
 
 ---
 
@@ -258,5 +263,5 @@ npm run cap:open:android  # Abre Android Studio
 
 ---
 
-**Última actualización**: 2024
+**Última actualización**: Diciembre 2024
 

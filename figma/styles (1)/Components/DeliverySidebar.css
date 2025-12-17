@@ -1,0 +1,240 @@
+/* ====================================
+   DELIVERY SIDEBAR
+   ==================================== */
+
+.delivery-sidebar {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Quick Actions Card */
+.delivery-actions-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--app-shadow-lg);
+}
+
+.delivery-actions-title {
+  color: var(--app-gray-800);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.delivery-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.delivery-action-button {
+  background: var(--app-blue-primary);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--app-transition-base);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.delivery-action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+  background: var(--app-blue-dark);
+}
+
+.delivery-action-button.secondary {
+  background: var(--app-gray-100);
+  color: var(--app-gray-700);
+  box-shadow: none;
+}
+
+.delivery-action-button.secondary:hover {
+  background: var(--app-gray-200);
+  box-shadow: var(--app-shadow);
+}
+
+.delivery-action-button svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.delivery-action-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Stats Grid */
+.delivery-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.delivery-stat-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: var(--app-shadow-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--app-transition-base);
+  cursor: pointer;
+}
+
+.delivery-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--app-shadow-xl);
+}
+
+.delivery-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: currentColor;
+}
+
+.delivery-stat-card.blue {
+  color: var(--app-blue-primary);
+}
+
+.delivery-stat-card.orange {
+  color: var(--app-orange);
+}
+
+.delivery-stat-card.green {
+  color: var(--app-green);
+}
+
+.delivery-stat-card.purple {
+  color: var(--app-purple);
+}
+
+.delivery-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.delivery-stat-label {
+  color: var(--app-gray-600);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.delivery-stat-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: currentColor;
+  opacity: 0.1;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delivery-stat-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: currentColor;
+  opacity: 1;
+}
+
+.delivery-stat-value {
+  color: var(--app-gray-800);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.delivery-stat-change {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.delivery-stat-change.positive {
+  color: var(--app-green);
+}
+
+.delivery-stat-change.negative {
+  color: var(--app-red);
+}
+
+.delivery-stat-change svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ====================================
+   RESPONSIVE
+   ==================================== */
+@media (max-width: 1024px) {
+  .delivery-sidebar {
+    width: 280px;
+  }
+  
+  .delivery-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .delivery-sidebar {
+    width: 100%;
+  }
+  
+  .delivery-actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .delivery-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .delivery-actions-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .delivery-action-text {
+    font-size: 0.75rem;
+  }
+}
+
+/* Scrollbar */
+.delivery-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.delivery-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.delivery-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.delivery-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
