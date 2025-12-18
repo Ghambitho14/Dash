@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.deliveryapp.mvp"
+    namespace "com.deliveryapp.repartidor"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.deliveryapp.mvp"
+        applicationId "com.deliveryapp.repartidor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -21,17 +21,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-}
-
-repositories {
-    google()
-    mavenCentral()
-    // flatDir is required for Capacitor/Cordova plugins
-    // This warning is safe to ignore - it's a known limitation of Capacitor
-    // The warning appears because flatDir doesn't support metadata, but it works fine for our use case
-    flatDir{
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 

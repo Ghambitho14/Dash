@@ -1,180 +1,262 @@
-import { Toaster } from 'react-hot-toast';
-import { CompanyPanel } from './components/panel/CompanyPanel';
+import { useState, useEffect, useCallback } from 'react';
+import { DriverApp } from './components/driver/DriverApp';
 import { Login } from './components/auth/Login';
-import { ConfirmModal } from './components/ui/ConfirmModal';
-import { useAuth } from './hooks/useAuth';
-import { useOrders } from './hooks/useOrders';
-import { useClients } from './hooks/useClients';
-import { useUsers } from './hooks/useUsers';
-import { useLocals } from './hooks/useLocals';
-import { useToast } from './hooks/useToast';
-import { useConfirm } from './hooks/useConfirm';
+import { DriverLayout } from './layouts/DriverLayout';
+import { supabase } from './utils/supabase';
+import { useDriverLocation } from './hooks/useDriverLocation';
+import { useLocationTracking } from './hooks/useLocationTracking';
+import { geocodeAddress, calculateDistance } from './utils/utils';
+import toast from 'react-hot-toast';
+import { logger } from './utils/logger';
+
+// Radio de proximidad en kilómetros (configurable)
+const PROXIMITY_RADIUS_KM = 5; // Por defecto 5 km
 
 export default function App() {
-	const { currentUser, login, logout } = useAuth();
-	const { localConfigs, setLocalConfigs, saveLocalConfigs } = useLocals(currentUser);
-	const { clients, createClient, updateClient, deleteClient } = useClients(currentUser, localConfigs);
-	const { users, createUser, updateUser, deleteUser } = useUsers(currentUser, localConfigs);
-	const { orders, setOrders, createOrder, deleteOrder, reloadOrders } = useOrders(currentUser);
-	const { showSuccess, showError } = useToast();
-	const { confirm, isOpen, config, onConfirm, onCancel } = useConfirm();
+	const [currentDriver, setCurrentDriver] = useState(null);
+	const [orders, setOrders] = useState([]);
+	const [driverActiveView, setDriverActiveView] = useState('orders');
+	const [loading, setLoading] = useState(false);
+	const [localCoordinates, setLocalCoordinates] = useState(new Map()); // Cache de coordenadas de locales
+	const [isOnline, setIsOnline] = useState(false); // Estado inicial: desconectado (no pide ubicación)
+	
+	// Obtener ubicación GPS del repartidor solo cuando está conectado
+	const { location: driverLocation, loading: locationLoading } = useDriverLocation(isOnline && !!currentDriver);
+	
+	// Tracking en tiempo real de la ubicación cuando está conectado
+	useLocationTracking(
+		currentDriver?.id,
+		null, // orderId - se actualizará cuando acepte un pedido
+		isOnline && !!currentDriver
+	);
 
-	// Wrappers para manejar errores y confirmaciones
-	const handleCreateClient = async (clientData) => {
-		try {
-			await createClient(clientData);
-			showSuccess('Cliente creado exitosamente');
-		} catch (err) {
-			showError('Error al crear cliente: ' + err.message);
+	// Función para formatear un pedido (memoizada para evitar re-renders y deps inestables)
+	const formatOrder = useCallback((order) => {
+		return {
+			id: `ORD-${order.id}`,
+			clientName: order.clients?.name || '',
+			clientPhone: order.clients?.phone || '',
+			pickupAddress: order.pickup_address,
+			deliveryAddress: order.delivery_address,
+			local: order.locals?.name || '',
+			localAddress: order.locals?.address || order.pickup_address || '',
+			suggestedPrice: parseFloat(order.suggested_price),
+			notes: order.notes || '',
+			status: order.status,
+			pickupCode: order.pickup_code,
+			driverName: order.drivers?.name || null,
+			driverId: order.driver_id,
+			createdAt: new Date(order.created_at),
+			updatedAt: new Date(order.updated_at),
+			_dbId: order.id,
+			_dbClientId: order.client_id,
+			_dbLocalId: order.local_id,
+			_dbUserId: order.user_id,
+		};
+	}, []);
+
+	// Geocodificar direcciones de locales (con cache)
+	const geocodeLocalAddress = useCallback(async (localAddress) => {
+		if (!localAddress) return null;
+
+		// Verificar cache
+		if (localCoordinates.has(localAddress)) {
+			return localCoordinates.get(localAddress);
 		}
-	};
 
-	const handleUpdateClient = async (clientId, clientData) => {
-		try {
-			await updateClient(clientId, clientData);
-			showSuccess('Cliente actualizado exitosamente');
-		} catch (err) {
-			showError('Error al actualizar cliente: ' + err.message);
+		// Geocodificar
+		const coords = await geocodeAddress(localAddress);
+		if (coords) {
+			setLocalCoordinates(prev => new Map(prev).set(localAddress, coords));
 		}
-	};
+		return coords;
+	}, [localCoordinates]);
 
-	const handleDeleteClient = async (clientId) => {
-		const confirmed = await confirm({
-			title: 'Eliminar Cliente',
-			message: '¿Estás seguro de que deseas eliminar este cliente?',
-			confirmText: 'Eliminar',
-			cancelText: 'Cancelar',
-			type: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		try {
-			await deleteClient(clientId);
-			showSuccess('Cliente eliminado exitosamente');
-		} catch (err) {
-			showError('Error al eliminar cliente: ' + err.message);
-		}
-	};
-
-	const handleCreateUser = async (userData) => {
-		try {
-			await createUser(userData);
-			showSuccess('Usuario creado exitosamente');
-		} catch (err) {
-			showError('Error al crear usuario: ' + err.message);
-		}
-	};
-
-	const handleUpdateUser = async (userId, userData) => {
-		try {
-			await updateUser(userId, userData);
-			showSuccess('Usuario actualizado exitosamente');
-		} catch (err) {
-			showError('Error al actualizar usuario: ' + err.message);
-		}
-	};
-
-	const handleDeleteUser = async (userId) => {
-		const confirmed = await confirm({
-			title: 'Eliminar Usuario',
-			message: '¿Estás seguro de que deseas eliminar este usuario?',
-			confirmText: 'Eliminar',
-			cancelText: 'Cancelar',
-			type: 'danger',
-		});
-
-		if (!confirmed) return;
+	// Cargar pedidos desde Supabase
+	const loadOrders = useCallback(async () => {
+		if (!currentDriver) return;
+		setLoading(true);
 
 		try {
-			await deleteUser(userId);
-			showSuccess('Usuario eliminado exitosamente');
+			const companyId = currentDriver.companyId || currentDriver.company_id;
+			const driverId = currentDriver.id;
+
+			// Crear consulta base
+			let query = supabase
+				.from('orders')
+				.select(`
+					*,
+					clients(name, phone, address),
+					locals(name, address),
+					company_users(name),
+					drivers(name, phone)
+				`);
+
+			// Si tiene empresa, filtrar por empresa
+			if (companyId) {
+				query = query.eq('company_id', companyId);
+			}
+
+			// Cargar pedidos pendientes O pedidos asignados a este driver
+			const { data, error } = await query
+				.or(`status.eq.Pendiente,driver_id.eq.${driverId}`)
+				.order('created_at', { ascending: false });
+
+			if (error) throw error;
+
+			// Formatear todos los pedidos
+			let formattedOrders = (data || []).map(formatOrder);
+
+			// Filtrar por proximidad si tenemos ubicación GPS y el pedido está pendiente
+			if (driverLocation && formattedOrders.length > 0) {
+				// Geocodificar direcciones de locales para pedidos pendientes
+				const ordersWithDistance = await Promise.all(
+					formattedOrders.map(async (order) => {
+						// Si el pedido ya está asignado al driver, no filtrar por distancia
+						if (order.status !== 'Pendiente' || order.driverId === driverId) {
+							return { ...order, distance: 0, withinRadius: true };
+						}
+
+						// Obtener coordenadas del local
+						const localCoords = await geocodeLocalAddress(order.localAddress);
+						if (!localCoords) {
+							// Si no se puede geocodificar, mostrar el pedido (fallback)
+							return { ...order, distance: null, withinRadius: true };
+						}
+
+						// Calcular distancia
+						const distance = calculateDistance(
+							driverLocation.lat,
+							driverLocation.lon,
+							localCoords.lat,
+							localCoords.lon
+						);
+
+						return {
+							...order,
+							distance: distance,
+							withinRadius: distance <= PROXIMITY_RADIUS_KM
+						};
+					})
+				);
+
+				// Filtrar solo pedidos dentro del radio (excepto los asignados al driver)
+				formattedOrders = ordersWithDistance.filter(order => 
+					order.driverId === driverId || order.withinRadius
+				);
+			}
+
+			setOrders(formattedOrders);
 		} catch (err) {
-			showError('Error al eliminar usuario: ' + err.message);
+			logger.error('Error cargando pedidos:', err);
+			toast.error('Error al cargar los pedidos');
+		} finally {
+			setLoading(false);
 		}
+	}, [currentDriver, formatOrder, driverLocation, geocodeLocalAddress]);
+
+	// Cargar pedidos cuando el driver se loguea
+	useEffect(() => {
+		if (currentDriver) {
+			loadOrders();
+		}
+	}, [currentDriver]);
+
+	// Recargar pedidos cuando cambia la ubicación GPS (con delay para evitar demasiadas llamadas)
+	useEffect(() => {
+		if (!currentDriver || locationLoading || !driverLocation) return;
+
+		// Esperar un poco antes de recargar para evitar llamadas excesivas
+		const timeoutId = setTimeout(() => {
+			loadOrders();
+		}, 2000);
+
+		return () => clearTimeout(timeoutId);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [driverLocation?.lat, driverLocation?.lon, currentDriver]);
+
+	// ✅ REALTIME: escuchar cambios en orders SOLO para la company del driver + fallback 60s
+	useEffect(() => {
+		if (!currentDriver) return;
+
+		const companyId = currentDriver.companyId || currentDriver.company_id;
+		if (!companyId) return;
+
+		// Carga inicial (por si entras y no hay datos aún)
+		loadOrders();
+
+		const channel = supabase
+			.channel(`orders-company-${companyId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'orders',
+					filter: `company_id=eq.${companyId}`,
+				},
+				() => {
+					loadOrders();
+				}
+			)
+			.subscribe();
+
+		// Fallback profesional (por si realtime cae / reconexión / lag)
+		const fallback = setInterval(() => {
+			loadOrders();
+		}, 60000);
+
+		return () => {
+			clearInterval(fallback);
+			supabase.removeChannel(channel);
+		};
+	}, [currentDriver, loadOrders]);
+
+	const handleLogin = (driver) => {
+		setCurrentDriver(driver);
+		// Guardar driver en localStorage (para compatibilidad)
+		localStorage.setItem('driver', JSON.stringify(driver));
 	};
 
-	// Si no hay usuario logueado, mostrar login
-	if (!currentUser) {
-		return <Login onLogin={login} />;
+	const handleLogout = () => {
+		setCurrentDriver(null);
+		setOrders([]);
+		localStorage.removeItem('driver');
+		localStorage.removeItem('orders');
+	};
+
+	// Si no hay driver logueado, mostrar login
+	if (!currentDriver) {
+		return <Login onLogin={handleLogin} />;
 	}
 
-	// Wrappers para manejar errores y confirmaciones de pedidos
-	const handleCreateOrder = async (orderData, clients, localConfigs) => {
-		try {
-			await createOrder(orderData, clients, localConfigs);
-			showSuccess('Pedido creado exitosamente');
-		} catch (err) {
-			showError('Error al crear pedido: ' + err.message);
-			throw err;
-		}
-	};
+	if (loading && orders.length === 0) {
+		return (
+			<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+				<p>Cargando pedidos...</p>
+			</div>
+		);
+	}
 
-	const handleDeleteOrder = async (orderId) => {
-		const confirmed = await confirm({
-			title: 'Eliminar Pedido',
-			message: '¿Estás seguro de que deseas eliminar este pedido?',
-			confirmText: 'Eliminar',
-			cancelText: 'Cancelar',
-			type: 'danger',
-		});
-
-		if (!confirmed) return;
-
-		try {
-			await deleteOrder(orderId);
-			showSuccess('Pedido eliminado exitosamente');
-		} catch (err) {
-			showError('Error al eliminar pedido: ' + err.message);
-			throw err;
-		}
-	};
-
-	const handleSaveLocalConfigs = async (configs) => {
-		try {
-			await saveLocalConfigs(configs);
-			showSuccess('Locales guardados exitosamente');
-		} catch (err) {
-			showError('Error al guardar locales: ' + err.message);
-			throw err;
-		}
-	};
-
-	// Solo vista de empresa
 	return (
-		<>
-			<Toaster />
-			<ConfirmModal
-				isOpen={isOpen}
-				onClose={onCancel}
-				onConfirm={onConfirm}
-				title={config?.title || 'Confirmar'}
-				message={config?.message || ''}
-				confirmText={config?.confirmText || 'Confirmar'}
-				cancelText={config?.cancelText || 'Cancelar'}
-				type={config?.type || 'danger'}
-			/>
-			<CompanyPanel 
-				currentUser={currentUser} 
-				orders={orders} 
+		<DriverLayout
+			driverName={currentDriver.name}
+			activeView={driverActiveView}
+			onViewChange={setDriverActiveView}
+			onLogout={handleLogout}
+			isOnline={isOnline}
+			onOnlineChange={setIsOnline}
+		>
+			<DriverApp
+				orders={orders}
 				setOrders={setOrders}
-				onReloadOrders={reloadOrders}
-				localConfigs={localConfigs}
-				setLocalConfigs={setLocalConfigs}
-				clients={clients}
-				onCreateClient={handleCreateClient}
-				onUpdateClient={handleUpdateClient}
-				onDeleteClient={handleDeleteClient}
-				users={users}
-				onCreateUser={handleCreateUser}
-				onUpdateUser={handleUpdateUser}
-				onDeleteUser={handleDeleteUser}
-				onCreateOrder={handleCreateOrder}
-				onDeleteOrder={handleDeleteOrder}
-				onSaveLocalConfigs={handleSaveLocalConfigs}
-				onLogout={logout}
+				onReloadOrders={loadOrders}
+				activeView={driverActiveView}
+				onViewChange={setDriverActiveView}
+				hasLocation={!!driverLocation}
+				locationLoading={locationLoading}
+				isOnline={isOnline}
 			/>
-		</>
+		</DriverLayout>
 	);
 }
-

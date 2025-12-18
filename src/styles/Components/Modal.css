@@ -1,4 +1,4 @@
-.superposicion-modal {
+.modal-overlay {
 	position: fixed;
 	top: 0;
 	right: 0;
@@ -9,7 +9,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 50;
 	padding: 1rem;
 	animation: fadeIn 0.2s ease;
 }
@@ -23,7 +23,7 @@
 	}
 }
 
-.contenido-modal {
+.modal-content {
 	background-color: white;
 	border-radius: 1.5rem;
 	width: 100%;
@@ -45,37 +45,37 @@
 	}
 }
 
-.contenido-modal-pequeño {
+.modal-content-sm {
 	max-width: 24rem;
 }
 
-.contenido-modal-mediano {
+.modal-content-md {
 	max-width: 28rem;
 }
 
-.contenido-modal-grande {
+.modal-content-lg {
 	max-width: 32rem;
 }
 
-.contenido-modal-extra-grande {
+.modal-content-xl {
 	max-width: 36rem;
 }
 
-.contenido-modal-2xl {
+.modal-content-2xl {
 	max-width: 42rem;
 }
 
-.contenido-modal-3xl {
+.modal-content-3xl {
 	max-width: 48rem;
 }
 
 @media (max-width: 640px) {
-	.superposicion-modal {
+	.modal-overlay {
 		padding: 0;
 		align-items: flex-end;
 	}
 
-	.contenido-modal {
+	.modal-content {
 		border-radius: 1rem 1rem 0 0;
 		max-height: 95vh;
 		border-bottom: none;
