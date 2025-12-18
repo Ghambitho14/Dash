@@ -10,5 +10,15 @@ export default defineConfig({
 		outDir: 'dist',
 		assetsDir: 'assets',
 	},
+	// Optimizar dependencias para evitar problemas con imports dinámicos
+	optimizeDeps: {
+		exclude: ['@capacitor/core', '@capacitor/geolocation']
+	},
+	// Resolver imports dinámicos de Capacitor solo en runtime
+	resolve: {
+		alias: {
+			// Permitir que los imports dinámicos se resuelvan en runtime
+		}
+	}
 });
 

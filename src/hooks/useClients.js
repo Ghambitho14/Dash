@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadClients, createClient, updateClient, deleteClient } from '../services/clientService';
+import { logger } from '../utils/logger';
 
 /**
  * Hook para gestionar clientes
@@ -17,7 +18,7 @@ export function useClients(currentUser, localConfigs) {
 			const loadedClients = await loadClients(companyId);
 			setClients(loadedClients);
 		} catch (err) {
-			console.error('Error cargando clientes:', err);
+			logger.error('Error cargando clientes:', err);
 		} finally {
 			setLoading(false);
 		}
@@ -42,7 +43,7 @@ export function useClients(currentUser, localConfigs) {
 			setClients(prev => [newClient, ...prev]);
 			return newClient;
 		} catch (err) {
-			console.error('Error creando cliente:', err);
+			logger.error('Error creando cliente:', err);
 			throw err;
 		}
 	}, [currentUser, localConfigs]);
@@ -63,7 +64,7 @@ export function useClients(currentUser, localConfigs) {
 			await fetchClients(); // Recargar todos los clientes
 			return true;
 		} catch (err) {
-			console.error('Error actualizando cliente:', err);
+			logger.error('Error actualizando cliente:', err);
 			throw err;
 		}
 	}, [currentUser, clients, localConfigs, fetchClients]);
@@ -79,7 +80,7 @@ export function useClients(currentUser, localConfigs) {
 			setClients(prev => prev.filter(c => c.id !== clientId));
 			return true;
 		} catch (err) {
-			console.error('Error eliminando cliente:', err);
+			logger.error('Error eliminando cliente:', err);
 			throw err;
 		}
 	}, [currentUser, clients]);

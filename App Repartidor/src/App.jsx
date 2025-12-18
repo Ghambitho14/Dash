@@ -3,12 +3,32 @@ import { DriverApp } from './components/driver/DriverApp';
 import { Login } from './components/auth/Login';
 import { DriverLayout } from './layouts/DriverLayout';
 import { supabase } from './utils/supabase';
+import { useDriverLocation } from './hooks/useDriverLocation';
+import { useLocationTracking } from './hooks/useLocationTracking';
+import { geocodeAddress, calculateDistance } from './utils/utils';
+import toast from 'react-hot-toast';
+import { logger } from './utils/logger';
+
+// Radio de proximidad en kilómetros (configurable)
+const PROXIMITY_RADIUS_KM = 5; // Por defecto 5 km
 
 export default function App() {
 	const [currentDriver, setCurrentDriver] = useState(null);
 	const [orders, setOrders] = useState([]);
 	const [driverActiveView, setDriverActiveView] = useState('orders');
 	const [loading, setLoading] = useState(false);
+	const [localCoordinates, setLocalCoordinates] = useState(new Map()); // Cache de coordenadas de locales
+	const [isOnline, setIsOnline] = useState(false); // Estado inicial: desconectado (no pide ubicación)
+	
+	// Obtener ubicación GPS del repartidor solo cuando está conectado
+	const { location: driverLocation, loading: locationLoading } = useDriverLocation(isOnline && !!currentDriver);
+	
+	// Tracking en tiempo real de la ubicación cuando está conectado
+	useLocationTracking(
+		currentDriver?.id,
+		null, // orderId - se actualizará cuando acepte un pedido
+		isOnline && !!currentDriver
+	);
 
 	// Función para formatear un pedido (memoizada para evitar re-renders y deps inestables)
 	const formatOrder = useCallback((order) => {
@@ -19,6 +39,7 @@ export default function App() {
 			pickupAddress: order.pickup_address,
 			deliveryAddress: order.delivery_address,
 			local: order.locals?.name || '',
+			localAddress: order.locals?.address || order.pickup_address || '',
 			suggestedPrice: parseFloat(order.suggested_price),
 			notes: order.notes || '',
 			status: order.status,
@@ -33,6 +54,23 @@ export default function App() {
 			_dbUserId: order.user_id,
 		};
 	}, []);
+
+	// Geocodificar direcciones de locales (con cache)
+	const geocodeLocalAddress = useCallback(async (localAddress) => {
+		if (!localAddress) return null;
+
+		// Verificar cache
+		if (localCoordinates.has(localAddress)) {
+			return localCoordinates.get(localAddress);
+		}
+
+		// Geocodificar
+		const coords = await geocodeAddress(localAddress);
+		if (coords) {
+			setLocalCoordinates(prev => new Map(prev).set(localAddress, coords));
+		}
+		return coords;
+	}, [localCoordinates]);
 
 	// Cargar pedidos desde Supabase
 	const loadOrders = useCallback(async () => {
@@ -67,22 +105,75 @@ export default function App() {
 			if (error) throw error;
 
 			// Formatear todos los pedidos
-			const formattedOrders = (data || []).map(formatOrder);
+			let formattedOrders = (data || []).map(formatOrder);
+
+			// Filtrar por proximidad si tenemos ubicación GPS y el pedido está pendiente
+			if (driverLocation && formattedOrders.length > 0) {
+				// Geocodificar direcciones de locales para pedidos pendientes
+				const ordersWithDistance = await Promise.all(
+					formattedOrders.map(async (order) => {
+						// Si el pedido ya está asignado al driver, no filtrar por distancia
+						if (order.status !== 'Pendiente' || order.driverId === driverId) {
+							return { ...order, distance: 0, withinRadius: true };
+						}
+
+						// Obtener coordenadas del local
+						const localCoords = await geocodeLocalAddress(order.localAddress);
+						if (!localCoords) {
+							// Si no se puede geocodificar, mostrar el pedido (fallback)
+							return { ...order, distance: null, withinRadius: true };
+						}
+
+						// Calcular distancia
+						const distance = calculateDistance(
+							driverLocation.lat,
+							driverLocation.lon,
+							localCoords.lat,
+							localCoords.lon
+						);
+
+						return {
+							...order,
+							distance: distance,
+							withinRadius: distance <= PROXIMITY_RADIUS_KM
+						};
+					})
+				);
+
+				// Filtrar solo pedidos dentro del radio (excepto los asignados al driver)
+				formattedOrders = ordersWithDistance.filter(order => 
+					order.driverId === driverId || order.withinRadius
+				);
+			}
+
 			setOrders(formattedOrders);
 		} catch (err) {
-			console.error('Error cargando pedidos:', err);
-			alert('Error al cargar los pedidos');
+			logger.error('Error cargando pedidos:', err);
+			toast.error('Error al cargar los pedidos');
 		} finally {
 			setLoading(false);
 		}
-	}, [currentDriver, formatOrder]);
+	}, [currentDriver, formatOrder, driverLocation, geocodeLocalAddress]);
 
 	// Cargar pedidos cuando el driver se loguea
 	useEffect(() => {
 		if (currentDriver) {
 			loadOrders();
 		}
-	}, [currentDriver, loadOrders]);
+	}, [currentDriver]);
+
+	// Recargar pedidos cuando cambia la ubicación GPS (con delay para evitar demasiadas llamadas)
+	useEffect(() => {
+		if (!currentDriver || locationLoading || !driverLocation) return;
+
+		// Esperar un poco antes de recargar para evitar llamadas excesivas
+		const timeoutId = setTimeout(() => {
+			loadOrders();
+		}, 2000);
+
+		return () => clearTimeout(timeoutId);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [driverLocation?.lat, driverLocation?.lon, currentDriver]);
 
 	// ✅ REALTIME: escuchar cambios en orders SOLO para la company del driver + fallback 60s
 	useEffect(() => {
@@ -153,6 +244,8 @@ export default function App() {
 			activeView={driverActiveView}
 			onViewChange={setDriverActiveView}
 			onLogout={handleLogout}
+			isOnline={isOnline}
+			onOnlineChange={setIsOnline}
 		>
 			<DriverApp
 				orders={orders}
@@ -160,6 +253,9 @@ export default function App() {
 				onReloadOrders={loadOrders}
 				activeView={driverActiveView}
 				onViewChange={setDriverActiveView}
+				hasLocation={!!driverLocation}
+				locationLoading={locationLoading}
+				isOnline={isOnline}
 			/>
 		</DriverLayout>
 	);

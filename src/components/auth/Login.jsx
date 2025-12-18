@@ -1,173 +1,126 @@
-import { useState } from 'react';
-import { supabase } from '../../utils/supabase';
-import { verifyPassword } from '../../utils/passwordUtils';
-import { Bike, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
-import { logger } from '../../utils/logger';
+import { Building2, Lock, User as UserIcon, LogIn } from 'lucide-react';
+import { useLogin } from '../../hooks/useLogin';
 import '../../styles/Components/Login.css';
 
 export function Login({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+	const {
+		username,
+		password,
+		error,
+		loading,
+		setUsername,
+		setPassword,
+		handleSubmit,
+	} = useLogin(onLogin);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return;
+	return (
+		<div className="login-contenedor">
+			<div className="login-envoltorio">
+				{/* Lado izquierdo - Ilustración */}
+				<div className="login-marca-lado">
+					<div className="login-ilustracion">
+						<div className="login-ilustracion-escena">
+							{/* Montañas de fondo */}
+							<div className="login-montana-atras"></div>
+							<div className="login-montana"></div>
+							
+							{/* Nubes */}
+							<div className="login-nube"></div>
+							<div className="login-nube"></div>
+							
+							{/* Estrellas */}
+							<div className="login-estrellas">
+								<div className="login-estrella"></div>
+								<div className="login-estrella"></div>
+								<div className="login-estrella"></div>
+								<div className="login-estrella"></div>
+								<div className="login-estrella"></div>
+							</div>
+							
+							{/* Luna/Sol */}
+							<div className="login-celestial"></div>
+						</div>
+					</div>
 
-    setError('');
-    setLoading(true);
+					<div className="login-ilustracion-texto">
+						<p className="login-ilustracion-titulo">Que tengas unas excelentes ventas.</p>
+						<p className="login-ilustracion-subtitulo">Planifica tus pedidos con dash</p>
+					</div>
+				</div>
 
-    try {
-      const { data, error: queryError } = await supabase
-        .from('drivers')
-        .select('*')
-        .eq('username', username)
-        .eq('active', true)
-        .single();
+				{/* Lado derecho - Formulario */}
+				<div className="login-formulario-lado">
+					<div className="login-encabezado">
+						<h1 className="login-saludo">
+							¡Hola!
+							<span className="login-saludo-destacado">Buen día</span>
+						</h1>
+						<p className="login-subtitulo">Ingresa tus credenciales para acceder</p>
+					</div>
 
-      if (queryError || !data) {
-        setError('Usuario o contraseña incorrectos');
-        return;
-      }
+					<div className="login-formulario-contenedor">
+						<form onSubmit={handleSubmit} className="login-formulario">
+							<div className="login-formulario-grupo">
+								<label className="login-etiqueta">
+									<div className="login-etiqueta-contenido">
+										<UserIcon style={{ width: '1rem', height: '1rem' }} />
+										Usuario
+									</div>
+								</label>
+								<input
+									type="text"
+									value={username}
+									onChange={(e) => setUsername(e.target.value)}
+									className="login-entrada"
+									placeholder="Ingresa tu usuario"
+									required
+								/>
+							</div>
 
-      // Verificar contraseña usando bcrypt
-      const isPasswordValid = await verifyPassword(password, data.password);
-      if (!isPasswordValid) {
-        setError('Usuario o contraseña incorrectos');
-        return;
-      }
+							<div className="login-formulario-grupo">
+								<label className="login-etiqueta">
+									<div className="login-etiqueta-contenido">
+										<Lock style={{ width: '1rem', height: '1rem' }} />
+										Contraseña
+									</div>
+								</label>
+								<input
+									type="password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									className="login-entrada"
+									placeholder="Ingresa tu contraseña"
+									required
+								/>
+							</div>
 
-      // Crear objeto driver sin contraseña
-      const driver = {
-        id: data.id,
-        username: data.username,
-        name: data.name,
-        phone: data.phone || '',
-        email: data.email || '',
-        active: data.active,
-        companyId: data.company_id,
-        company_id: data.company_id,
-        address: data.address || '',
-      };
+							<div className="login-olvidaste-contraseña">
+								<a href="#">¿Olvidaste tu contraseña?</a>
+							</div>
 
-      // Iniciar sesión directamente - la ubicación se obtendrá automáticamente cuando active "Conectado"
-      onLogin(driver);
-    } catch (err) {
-      logger.error('Error en login:', err);
-      setError('Error al iniciar sesión. Intenta nuevamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
+							{error && (
+								<div className="login-error">
+									{error}
+								</div>
+							)}
 
-  return (
-    <div className="login-container">
-      {/* HEADER */}
-      <header className="login-header">
-		<div className="glass-effect">
-		<div className="light-beam" />
-		<div className="light-beam" />
-		<div className="light-beam" />
-		<div className="floating-light" />
-		<div className="floating-light" />
-		<div className="floating-light" />
-		<div className="floating-light" />
-		<div className="frost-overlay" />
+							<button
+								type="submit"
+								className="login-boton"
+								disabled={loading}
+							>
+								<LogIn style={{ width: '1.25rem', height: '1.25rem' }} />
+								{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+							</button>
+						</form>
+
+						<div className="login-crear-cuenta">
+							<span className="login-crear-cuenta-texto">¿No tienes cuenta?</span>
+							<a href="#" className="login-crear-cuenta-enlace">Crear cuenta</a>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
-
-        <div className="logo-container">
-          <Bike className="logo-icon" />
-        </div>
-
-        <h1 className="header-title">App Repartidor</h1>
-        <p className="header-subtitle">
-          Inicia sesión para comenzar tu jornada
-        </p>
-      </header>
-
-      {/* CARD */}
-      <section className="login-card">
-        <h2 className="card-title">Bienvenido</h2>
-        <p className="card-description">
-          Ingresa tus credenciales para continuar
-        </p>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          {/* Usuario */}
-          <div className="form-group">
-            <label className="form-label">
-              <UserIcon className="label-icon" />
-              Usuario
-            </label>
-            <input
-              type="text"
-              className={`form-input ${error ? 'is-error' : ''}`}
-              placeholder="Ingresa tu usuario"
-              value={username}
-              autoComplete="username"
-              disabled={loading}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setError('');
-              }}
-              required
-            />
-          </div>
-
-          {/* Contraseña */}
-          <div className="form-group">
-            <label className="form-label">
-              <Lock className="label-icon" />
-              Contraseña
-            </label>
-
-            <div className="password-wrapper">
-              <input
-                type="password"
-                className={`form-input password-input ${error ? 'is-error' : ''}`}
-                placeholder="Ingresa tu contraseña"
-                value={password}
-                autoComplete="current-password"
-                disabled={loading}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                required
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="driver-login-error">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="login-button"
-            disabled={loading}
-          >
-            <span className="login-button-content">
-              {loading ? (
-                <>
-                  <span className="login-spinner" />
-                  Entrando...
-                </>
-              ) : (
-                <>
-                  Iniciar sesión
-                  <ArrowRight className="login-arrow-icon" />
-                </>
-              )}
-            </span>
-          </button>
-        </form>
-
-        <div className="safe-area" />
-      </section>
-    </div>
-  );
+	);
 }

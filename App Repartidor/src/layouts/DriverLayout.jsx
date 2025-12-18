@@ -3,8 +3,7 @@ import { Menu, LogOut } from 'lucide-react';
 import { DriverSidebar } from '../components/driver/DriverSidebar';
 import '../styles/layouts/DriverLayout.css';
 
-export function DriverLayout({ children, driverName, activeView, onViewChange, onLogout }) {
-	const [isOnline, setIsOnline] = useState(true);
+export function DriverLayout({ children, driverName, activeView, onViewChange, onLogout, isOnline, onOnlineChange }) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
 	return (
@@ -40,7 +39,7 @@ export function DriverLayout({ children, driverName, activeView, onViewChange, o
 								<input
 									type="checkbox"
 									checked={isOnline}
-									onChange={(e) => setIsOnline(e.target.checked)}
+									onChange={(e) => onOnlineChange && onOnlineChange(e.target.checked)}
 								/>
 								<span className="driver-layout-status-slider"></span>
 								<span className="driver-layout-status-label">{isOnline ? 'Conectado' : 'Desconectado'}</span>

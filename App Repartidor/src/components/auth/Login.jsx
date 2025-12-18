@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../../utils/supabase';
 import { verifyPassword } from '../../utils/passwordUtils';
 import { Bike, Lock, User as UserIcon, ArrowRight } from 'lucide-react';
+import { logger } from '../../utils/logger';
 import '../../styles/Components/Login.css';
 
 export function Login({ onLogin }) {
@@ -47,11 +48,13 @@ export function Login({ onLogin }) {
         active: data.active,
         companyId: data.company_id,
         company_id: data.company_id,
+        address: data.address || '',
       };
 
+      // Iniciar sesión directamente - la ubicación se obtendrá automáticamente cuando active "Conectado"
       onLogin(driver);
     } catch (err) {
-      console.error(err);
+      logger.error('Error en login:', err);
       setError('Error al iniciar sesión. Intenta nuevamente.');
     } finally {
       setLoading(false);

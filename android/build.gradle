@@ -17,6 +17,35 @@ buildscript {
 
 apply from: "variables.gradle"
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    
+    // Suppress warnings - required for Capacitor/Cordova plugins
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (project.android.hasProperty('lintOptions')) {
+                    project.android.lintOptions {
+                        checkReleaseBuilds false
+                        abortOnError false
+                        disable 'InvalidPackage'
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Suppress flatDir deprecation warnings globally
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:-deprecation"
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

@@ -311,3 +311,31 @@
 	font-weight: 500;
 }
 
+.order-detail-driver-map-container {
+	margin-top: 0.75rem;
+}
+
+.order-detail-driver-map-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+	color: #6b7280;
+	margin-bottom: 0.5rem;
+}
+
+.order-detail-driver-map {
+	width: 100%;
+	height: 12rem;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	border: 1px solid #e2e8f0;
+}
+
+@media (min-width: 768px) {
+	.order-detail-driver-map {
+		height: 16rem;
+	}
+}
+

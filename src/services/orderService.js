@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Formatea un pedido de la base de datos al formato de la aplicación
@@ -11,6 +12,7 @@ export function formatOrder(order) {
 		pickupAddress: order.pickup_address,
 		deliveryAddress: order.delivery_address,
 		local: order.locals?.name || '',
+		localAddress: order.locals?.address || order.pickup_address || '',
 		suggestedPrice: parseFloat(order.suggested_price),
 		notes: order.notes || '',
 		status: order.status,
@@ -36,7 +38,7 @@ export async function loadOrders(companyId, localId = null) {
 			.select(`
 				*,
 				clients(name, phone, address),
-				locals(name),
+				locals(name, address),
 				company_users(name, username),
 				drivers(name, phone)
 			`)
@@ -52,7 +54,7 @@ export async function loadOrders(companyId, localId = null) {
 
 		return (data || []).map(formatOrder);
 	} catch (err) {
-		console.error('Error cargando pedidos:', err);
+		logger.error('Error cargando pedidos:', err);
 		throw err;
 	}
 }
@@ -79,7 +81,7 @@ export async function createOrder(orderData, companyId, userId) {
 			.select(`
 				*,
 				clients(name, phone, address),
-				locals(name),
+				locals(name, address),
 				company_users(name, username),
 				drivers(name, phone)
 			`)
@@ -88,7 +90,7 @@ export async function createOrder(orderData, companyId, userId) {
 		if (error) throw error;
 		return formatOrder(data);
 	} catch (err) {
-		console.error('Error creando pedido:', err);
+		logger.error('Error creando pedido:', err);
 		throw err;
 	}
 }
@@ -106,7 +108,7 @@ export async function deleteOrder(orderDbId) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error eliminando pedido:', err);
+		logger.error('Error eliminando pedido:', err);
 		throw err;
 	}
 }

@@ -1,12 +1,241 @@
-# App Repartidor - Aplicación Móvil para Repartidores
+# Sistema de Delivery - Dash
 
-Aplicación móvil para repartidores que permite aceptar pedidos, actualizar estados y gestionar entregas. Disponible como aplicación web y APK Android.
+Sistema completo de gestión de delivery con tres aplicaciones integradas: aplicación empresarial para gestión de pedidos, panel de administración para superadministradores, y aplicación móvil para repartidores.
 
----
+## Descripción General
 
-## Propósito
+Este proyecto es un sistema multi-aplicación para la gestión de pedidos de delivery que incluye:
 
-Esta aplicación permite a los repartidores:
+- **DeliveryApp (App Empresarial)**: Aplicación web para empresas y administradores locales
+- **Panel Admin**: Panel de administración para superadministradores
+- **App Repartidor**: Aplicación móvil (web + APK Android) para repartidores
+
+Todas las aplicaciones están integradas con Supabase como base de datos y backend.
+
+## Estructura del Proyecto
+
+```
+Dash/
+├── src/                          # DeliveryApp (App Empresarial) - Solo Web
+├── Paneladmin/                   # Panel Admin - Solo Web
+├── App Repartidor/               # App Repartidor - Web + APK Android
+├── Database/                     # Scripts SQL y documentación de BD
+├── android/                      # Proyecto Android nativo (generado)
+├── package.json                  # Configuración principal
+├── vite.config.js                # Configuración de Vite
+└── ARCHITECTURE.md               # Documentación de arquitectura
+```
+
+## Requisitos Previos
+
+- Node.js 16 o superior
+- npm o yarn
+- Cuenta de Supabase configurada
+- Para compilar APK: Android Studio instalado
+
+## Instalación
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <url-del-repositorio>
+cd Dash
+```
+
+### 2. Instalar dependencias
+
+```bash
+# Instalar dependencias principales
+npm install
+
+# Instalar dependencias de App Empresarial
+cd src
+npm install
+cd ..
+
+# Instalar dependencias de Panel Admin
+cd Paneladmin
+npm install
+cd ..
+
+# Instalar dependencias de App Repartidor
+cd "App Repartidor"
+npm install
+cd ..
+```
+
+### 3. Configurar variables de entorno
+
+Crea archivos `.env` en cada aplicación con las credenciales de Supabase:
+
+**Raíz del proyecto (si aplica):**
+```env
+VITE_PROJECT_URL=https://tu-proyecto.supabase.co
+VITE_ANNON_KEY=tu_anon_key_aqui
+```
+
+**src/.env:**
+```env
+VITE_PROJECT_URL=https://tu-proyecto.supabase.co
+VITE_ANNON_KEY=tu_anon_key_aqui
+```
+
+**Paneladmin/.env:**
+```env
+VITE_PROJECT_URL=https://tu-proyecto.supabase.co
+VITE_ANNON_KEY=tu_anon_key_aqui
+```
+
+**App Repartidor/.env:**
+```env
+VITE_PROJECT_URL=https://tu-proyecto.supabase.co
+VITE_ANNON_KEY=tu_anon_key_aqui
+```
+
+### 4. Configurar la base de datos
+
+Consulta la documentación en `Database/README.md` para configurar la base de datos en Supabase.
+
+## Desarrollo
+
+### App Empresarial (DeliveryApp)
+
+```bash
+# Desde la raíz del proyecto
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5173`
+
+### Panel Admin
+
+```bash
+cd Paneladmin
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5174` (o siguiente puerto disponible)
+
+### App Repartidor
+
+```bash
+cd "App Repartidor"
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5175` (o siguiente puerto disponible)
+
+## Compilación para Producción
+
+### App Empresarial
+
+```bash
+npm run build
+```
+
+Los archivos compilados estarán en `dist/`
+
+### Panel Admin
+
+```bash
+cd Paneladmin
+npm run build
+```
+
+Los archivos compilados estarán en `Paneladmin/dist/`
+
+### App Repartidor (Web)
+
+```bash
+cd "App Repartidor"
+npm run build
+```
+
+Los archivos compilados estarán en `App Repartidor/dist/`
+
+### App Repartidor (APK Android)
+
+**Windows:**
+```bash
+cd "App Repartidor"
+build-apk.bat
+```
+
+**Linux/Mac:**
+```bash
+cd "App Repartidor"
+chmod +x build-apk.sh
+./build-apk.sh
+```
+
+**Manual:**
+```bash
+cd "App Repartidor"
+npm run build
+npx cap sync
+npm run cap:open:android
+```
+
+Luego en Android Studio:
+1. Espera a que Gradle sincronice
+2. Ve a: **Build > Build Bundle(s) / APK(s) > Build APK(s)**
+3. El APK estará en: `android/app/build/outputs/apk/debug/app-debug.apk`
+
+## Aplicaciones del Sistema
+
+### 1. DeliveryApp (App Empresarial)
+
+**Ubicación**: `src/`  
+**Tipo**: Aplicación Web (React + Vite)  
+**Plataforma**: Solo Web
+
+#### Funcionalidades
+
+- Crear y gestionar pedidos de delivery
+- Administrar clientes y sus direcciones
+- Gestionar usuarios (empresariales, admin, locales)
+- Configurar locales/sucursales
+- Ver estadísticas y estado de pedidos en tiempo real
+
+#### Roles de Usuario
+
+- **empresarial**: Acceso completo a todas las funciones
+- **admin**: Administrador con permisos extendidos
+- **local**: Usuario de local específico, acceso limitado
+
+#### Estados de Pedidos
+
+1. **Pendiente**: Pedido creado, sin asignar
+2. **Asignado**: Repartidor aceptó el pedido
+3. **En camino al retiro**: Repartidor yendo a retirar
+4. **Producto retirado**: Repartidor retiró (requiere código)
+5. **Entregado**: Pedido completado
+
+### 2. Panel Admin
+
+**Ubicación**: `Paneladmin/`  
+**Tipo**: Aplicación Web (React + Vite)  
+**Plataforma**: Solo Web
+
+#### Funcionalidades
+
+- Crear nuevas empresas
+- Crear repartidores
+- Crear usuarios empresariales automáticamente al crear empresas
+- Gestionar el sistema completo
+
+#### Autenticación
+
+Los superadministradores se autentican con email y password contra la tabla `superadmins` en Supabase.
+
+### 3. App Repartidor
+
+**Ubicación**: `App Repartidor/`  
+**Tipo**: Aplicación Híbrida (React + Capacitor)  
+**Plataforma**: Web + APK Android
+
+#### Funcionalidades
+
 - Ver pedidos disponibles
 - Aceptar pedidos
 - Actualizar estado de pedidos
@@ -15,360 +244,279 @@ Esta aplicación permite a los repartidores:
 - Gestionar perfil y configuración
 - Ver ganancias en billetera
 
----
+#### Funcionalidades Especiales
 
-## Inicio Rápido
+- **Timeout automático**: Pedidos "Asignado" se revierten a "Pendiente" si no se actualizan en 1 minuto
+- **Recarga periódica**: Pedidos se recargan automáticamente cada 30 segundos
+- **Historial de estados**: Cada cambio se registra en `order_status_history`
 
-### Requisitos Previos
-- Node.js 16+ instalado
-- Archivo `.env` configurado con credenciales de Supabase
-- Para APK: Android Studio instalado
+## Base de Datos
 
-### Instalación
+El sistema utiliza Supabase (PostgreSQL) como base de datos. Las tablas principales son:
 
-```bash
-# Desde la carpeta App Repartidor
-cd "App Repartidor"
-npm install
-```
+- `companies`: Información de empresas
+- `company_users`: Usuarios de empresas (roles: empresarial, admin, local)
+- `drivers`: Repartidores
+- `locals`: Locales/sucursales de empresas
+- `clients`: Clientes
+- `orders`: Pedidos
+- `order_status_history`: Historial de cambios de estado de pedidos
+- `superadmins`: Superadministradores
 
-### Configuración
+Para más detalles sobre la base de datos, consulta `Database/README.md`
 
-Crea un archivo `.env` en la carpeta `App Repartidor/`:
+## Tecnologías Utilizadas
 
-```env
-VITE_PROJECT_URL=https://tu-proyecto.supabase.co
-VITE_ANNON_KEY=tu_anon_key_aqui
-```
+### Compartidas
 
-### Desarrollo Web
+- **React**: Framework de UI
+- **Vite**: Build tool y servidor de desarrollo
+- **Supabase**: Base de datos y backend
+- **Lucide React**: Iconos
+- **CSS Modules**: Estilos por componente
 
-```bash
-npm run dev
-```
+### Específicas
 
-La aplicación estará disponible en `http://localhost:5175` (o siguiente puerto disponible)
-
-### Compilación para Web
-
-```bash
-npm run build
-```
-
-Los archivos compilados estarán en `dist/`
-
----
-
-## Compilación para APK Android
-
-### Requisitos
-- Android Studio instalado
-- Java JDK configurado
-- Android SDK instalado
-
-### Compilar APK
-
-**Windows:**
-```bash
-build-apk.bat
-```
-
-**Linux/Mac:**
-```bash
-chmod +x build-apk.sh
-./build-apk.sh
-```
-
-### Pasos Manuales
-
-```bash
-# 1. Compilar la aplicación
-npm run build
-
-# 2. Sincronizar con Capacitor
-npx cap sync
-
-# 3. Abrir Android Studio
-npm run cap:open:android
-```
-
-### En Android Studio
-
-1. Espera a que Gradle sincronice
-2. Ve a: **Build > Build Bundle(s) / APK(s) > Build APK(s)**
-3. El APK estará en: `android/app/build/outputs/apk/debug/app-debug.apk`
-
----
-
-## Estructura del Proyecto
-
-```
-App Repartidor/
-├── src/
-│   ├── App.jsx                  # Componente raíz con lógica principal
-│   ├── main.jsx                 # Punto de entrada
-│   ├── components/              # Componentes React
-│   │   ├── DriverApp.jsx        # Vista principal con pedidos
-│   │   ├── Login.jsx            # Autenticación de repartidores
-│   │   ├── DriverSidebar.jsx    # Menú lateral de navegación
-│   │   ├── OrderList.jsx        # Lista de pedidos
-│   │   ├── OrderCard.jsx        # Tarjeta de pedido
-│   │   ├── OrderDetail.jsx      # Detalles del pedido
-│   │   ├── PickupCodeModal.jsx  # Modal para validar código
-│   │   ├── DriverProfile.jsx    # Perfil del repartidor
-│   │   ├── DriverWallet.jsx     # Billetera con ganancias
-│   │   ├── DriverSettings.jsx   # Configuración
-│   │   └── Modal.jsx            # Componente modal reutilizable
-│   ├── layouts/                 # Layouts
-│   │   └── DriverLayout.jsx     # Layout con header y menú
-│   ├── styles/                   # Estilos CSS
-│   │   ├── globals.css          # Estilos globales
-│   │   ├── layouts/             # Estilos de layouts
-│   │   ├── Components/         # Estilos por componente
-│   │   └── utils/               # Utilidades CSS
-│   ├── types/                    # Tipos y estructuras
-│   │   ├── order.js             # Estructura de pedidos
-│   │   └── driver.js            # Estructura de repartidores
-│   └── utils/                    # Utilidades
-│       ├── supabase.js          # Cliente de Supabase
-│       ├── utils.js              # Funciones helper
-│       └── mockData.js           # Datos de prueba
-├── android/                      # Proyecto Android (generado por Capacitor)
-├── capacitor.config.json         # Configuración de Capacitor
-├── build-apk.bat                 # Script para compilar APK (Windows)
-└── package.json                  # Dependencias
-```
-
----
-
-## Autenticación
-
-### Repartidor
-
-Los repartidores se autentican con:
-- **Username**: Nombre de usuario del repartidor
-- **Password**: Contraseña
-
-La autenticación se realiza contra la tabla `drivers` en Supabase.
-
-**Requisitos**:
-- El repartidor debe existir en la tabla `drivers`
-- El campo `active` debe ser `true`
-
----
-
-## Funcionalidades Principales
-
-### 1. Gestión de Pedidos
-
-#### Ver Pedidos Disponibles
-- Lista de pedidos con estado "Pendiente"
-- Información: cliente, direcciones, precio, local
-- Botón para aceptar pedido
-
-#### Mis Pedidos
-- Pedidos asignados al repartidor
-- Estados: Asignado, En camino, Retirado
-- Acciones según estado
-
-#### Pedidos Completados
-- Historial de pedidos entregados
-- Estadísticas de completados
-- Información de ganancias
-
-### 2. Actualizar Estado de Pedidos
-
-#### Flujo de Estados
-1. **Aceptar Pedido**: Cambia de "Pendiente" a "Asignado"
-2. **En Camino al Retiro**: Cambia a "En camino al retiro"
-3. **Retirar Producto**: Requiere código de retiro → Cambia a "Producto retirado"
-4. **Entregar**: Cambia a "Entregado"
-
-#### Validación de Código
-- Al marcar "Retirar Producto", se solicita código de 6 dígitos
-- El código debe coincidir con el del pedido
-- Si es correcto, el estado cambia a "Producto retirado"
-
-### 3. Funcionalidades Especiales
-
-#### Timeout Automático
-- Los pedidos "Asignado" se revierten a "Pendiente" si no se actualizan en 1 minuto
-- Previene que pedidos queden "colgados"
-
-#### Recarga Automática
-- Los pedidos se recargan automáticamente cada 30 segundos
-- Mantiene la información actualizada
-
-#### Historial de Estados
-- Cada cambio de estado se registra en `order_status_history`
-- Permite auditoría y seguimiento
-
-### 4. Perfil y Configuración
-
-#### Perfil
-- Ver información del repartidor
-- Editar datos personales
-
-#### Billetera
-- Ver ganancias totales
-- Ver ganancias por pedido entregado
-- Estadísticas de entregas
-
-#### Configuración
-- Ajustes de la aplicación
-- Preferencias
-
----
-
-## Componentes Principales
-
-### DriverApp
-Vista principal que contiene:
-- Estadísticas (pedidos disponibles, mis pedidos, completados)
-- Tabs para diferentes vistas
-- Lista de pedidos
-- Modal de detalles
-
-### DriverSidebar
-Menú lateral con:
-- Navegación entre vistas
-- Opciones: Pedidos, Completados, Perfil, Billetera, Ajustes
-- Cierre de sesión
-
-### PickupCodeModal
-Modal para validar código:
-- Input numérico de 6 dígitos
-- Validación contra código del pedido
-- Mensajes de error/éxito
-
----
-
-## Flujo de Datos
-
-### Carga Inicial
-1. Repartidor se autentica
-2. Se cargan pedidos disponibles (estado "Pendiente")
-3. Se cargan pedidos del repartidor (asignados)
-4. Se cargan pedidos completados
-
-### Aceptar Pedido
-1. Repartidor hace clic en "Aceptar"
-2. Se actualiza `orders` con `driver_id` y estado "Asignado"
-3. Se crea registro en `order_status_history`
-4. Se recarga la lista
-
-### Actualizar Estado
-1. Repartidor selecciona acción
-2. Se actualiza `orders` con nuevo estado
-3. Se crea registro en `order_status_history`
-4. Si es "Retirar", se valida código
-
-### Recarga Automática
-- Cada 30 segundos se recargan los pedidos
-- Mantiene sincronización con la base de datos
-
----
-
-## Tablas de Supabase Utilizadas
-
-- `drivers`: Autenticación y información de repartidores
-- `orders`: Pedidos (lectura y actualización)
-- `order_status_history`: Historial de cambios (crear)
-- `clients`: Información de clientes (lectura)
-- `locals`: Información de locales (lectura)
-
----
-
-## Estilos y Diseño
-
-### Responsive Design
-- **Mobile First**: Diseñado principalmente para móviles
-- **Tablet**: Ajustes de layout
-- **Desktop**: Adaptación para pantallas grandes
-
-### Estilos
-- CSS Modules por componente
-- Estilos globales en `globals.css`
-- Utilidades CSS en `utils/`
-
----
-
-## Configuración de Capacitor
-
-### capacitor.config.json
-
-```json
-{
-  "appId": "com.deliveryapp.repartidor",
-  "appName": "DeliveryApp Repartidor",
-  "webDir": "dist",
-  "server": {
-    "androidScheme": "https"
-  }
-}
-```
-
-### Plataforma Android
-
-- **Carpeta**: `android/` (generada automáticamente)
-- **Configuración**: Gradle
-- **Salida APK**: `android/app/build/outputs/apk/`
-
----
+- **App Repartidor**: Capacitor 6.0.0 para compilación Android
+- **Panel Admin**: React 19.2.0, Vite 7.2.4
 
 ## Scripts Disponibles
 
+### Raíz del Proyecto
+
 ```bash
-npm run dev                    # Servidor de desarrollo
-npm run build                  # Compilar para web
-npm run apk:build              # Compilar y sincronizar para APK
-npm run cap:sync               # Sincronizar con Capacitor
-npm run cap:open:android       # Abrir Android Studio
-npm run lint                   # Linter
+npm run dev              # Servidor de desarrollo (App Empresarial)
+npm run build            # Compilar App Empresarial
+npm run build:admin      # Compilar Panel Admin
+npm run build:all        # Compilar ambas apps web
+npm run start            # Iniciar servidor (requiere compilación)
+npm run start:prod       # Compilar y iniciar servidor
+npm run lint             # Linter
+npm run preview          # Preview de build
 ```
 
----
+### Panel Admin
 
-## Notas de Desarrollo
+```bash
+cd Paneladmin
+npm run dev              # Servidor de desarrollo
+npm run build            # Compilar para producción
+npm run preview          # Preview de build
+npm run lint             # Linter
+```
 
-### Convenciones
-- Componentes en PascalCase
-- Hooks personalizados cuando sea necesario
+### App Repartidor
+
+```bash
+cd "App Repartidor"
+npm run dev              # Servidor de desarrollo
+npm run build            # Compilar para web
+npm run apk:build        # Compilar y sincronizar para APK
+npm run cap:sync         # Sincronizar con Capacitor
+npm run cap:open:android # Abrir Android Studio
+npm run lint             # Linter
+```
+
+## Flujo de Trabajo
+
+### Creación de Pedido
+
+1. Usuario empresarial crea pedido en `CreateOrderForm`
+2. Se genera código de retiro único (6 dígitos)
+3. Pedido se guarda en `orders` con estado "Pendiente"
+4. App Repartidor recibe el pedido en tiempo real
+5. Repartidor acepta → Estado cambia a "Asignado"
+6. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
+7. Repartidor ingresa código → Estado cambia a "Producto retirado"
+8. Repartidor entrega → Estado cambia a "Entregado"
+
+### Autenticación
+
+#### App Empresarial
+- Usuario ingresa email y password
+- Consulta en `company_users` con filtro `active = true`
+- Carga datos relacionados: `companies`, `locals`
+- Guarda sesión en `localStorage`
+
+#### App Repartidor
+- Repartidor ingresa username y password
+- Consulta en `drivers` con filtro `active = true`
+- Guarda sesión en `localStorage`
+
+#### Panel Admin
+- Superadmin ingresa email y password
+- Consulta en `superadmins` con filtro `active = true`
+- Guarda sesión en `localStorage`
+
+## Seguridad
+
+### Autenticación
+
+- Autenticación basada en tablas de Supabase
+- Validación de usuarios activos (`active = true`)
+- Sesiones guardadas en `localStorage`
+
+### Código de Retiro
+
+- Código único de 6 dígitos por pedido
+- Generado al crear el pedido
+- Validado antes de cambiar estado a "Producto retirado"
+
+**IMPORTANTE**: Las contraseñas en la base de datos deben estar hasheadas. En producción, siempre usa bcrypt o similar.
+
+## Estructura de Archivos
+
+### App Empresarial (`src/`)
+
+```
+src/
+├── App.jsx                    # Componente raíz
+├── main.jsx                   # Punto de entrada
+├── components/                # Componentes React
+│   ├── CompanyPanel.jsx
+│   ├── Login.jsx
+│   ├── OrderList.jsx
+│   ├── OrderCard.jsx
+│   ├── OrderDetail.jsx
+│   ├── CreateOrderForm.jsx
+│   ├── ClientManagement.jsx
+│   ├── CreateClientForm.jsx
+│   ├── UserManagement.jsx
+│   ├── CreateUserForm.jsx
+│   ├── LocalSettings.jsx
+│   └── Modal.jsx
+├── layouts/                   # Layouts
+│   └── CompanyLayout.jsx
+├── styles/                    # Estilos CSS
+│   ├── globals.css
+│   ├── layouts/
+│   ├── Components/
+│   └── utils/
+├── types/                     # Tipos y estructuras
+│   ├── order.js
+│   ├── client.js
+│   └── user.js
+└── utils/                     # Utilidades
+    ├── supabase.js
+    ├── utils.js
+    └── mockData.js
+```
+
+### App Repartidor (`App Repartidor/src/`)
+
+```
+App Repartidor/src/
+├── App.jsx                    # Componente raíz
+├── main.jsx                   # Punto de entrada
+├── components/                # Componentes React
+│   ├── DriverApp.jsx
+│   ├── Login.jsx
+│   ├── DriverSidebar.jsx
+│   ├── OrderList.jsx
+│   ├── OrderCard.jsx
+│   ├── OrderDetail.jsx
+│   ├── PickupCodeModal.jsx
+│   ├── DriverProfile.jsx
+│   ├── DriverWallet.jsx
+│   ├── DriverSettings.jsx
+│   └── Modal.jsx
+├── layouts/                   # Layouts
+│   └── DriverLayout.jsx
+├── styles/                    # Estilos CSS
+│   ├── globals.css
+│   ├── layouts/
+│   ├── Components/
+│   └── utils/
+├── types/                     # Tipos y estructuras
+│   ├── order.js
+│   └── driver.js
+└── utils/                     # Utilidades
+    ├── supabase.js
+    ├── utils.js
+    └── mockData.js
+```
+
+### Panel Admin (`Paneladmin/src/`)
+
+```
+Paneladmin/src/
+├── App.jsx                    # Componente raíz
+├── main.jsx                   # Punto de entrada
+├── components/                # Componentes React
+│   ├── Dashboard.jsx
+│   └── Login.jsx
+├── style/                     # Estilos CSS
+│   ├── App.css
+│   ├── Dashboard.css
+│   ├── Login.css
+│   └── index.css
+└── utils/                     # Utilidades
+    └── supabase.js
+```
+
+## Convenciones de Código
+
+- Nombres de componentes en PascalCase
+- Archivos CSS con mismo nombre que componente
 - Funciones helper en `utils/`
 - Tipos y estructuras en `types/`
+- Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
+- Datos persistentes en `localStorage`
+- Sincronización con Supabase en tiempo real
 
-### Estado Global
-- Estado gestionado con React Hooks
-- `useState` para estado local
-- `useEffect` para efectos secundarios
-- `useCallback` para funciones memoizadas
+## Responsive Design
 
-### Variables de Entorno
-Asegúrate de tener el archivo `.env` configurado antes de iniciar.
+- **Desktop**: Layout completo con sidebar visible
+- **Tablet**: Sidebar colapsable, ajustes de padding
+- **Mobile**: Sidebar como overlay, tabs horizontales, modales desde abajo
 
----
+Breakpoints:
+- Mobile: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px
 
 ## Solución de Problemas
 
 ### Error: "Cannot find module '@supabase/supabase-js'"
+
 ```bash
 npm install
 ```
 
 ### Error: "VITE_PROJECT_URL is not defined"
+
 Verifica que el archivo `.env` existe y tiene las variables correctas.
 
 ### Error: "android platform has not been added yet"
+
 ```bash
+cd "App Repartidor"
 npx cap add android
 ```
 
 ### Error al compilar APK
+
 - Verifica que Android Studio esté instalado
 - Verifica que Java JDK esté configurado
 - Verifica que Android SDK esté instalado
 
----
+## Documentación Adicional
+
+- `ARCHITECTURE.md`: Documentación completa de arquitectura
+- `src/README.md`: Documentación de App Empresarial
+- `App Repartidor/README.md`: Documentación de App Repartidor
+- `Paneladmin/README.md`: Documentación de Panel Admin
+- `Database/README.md`: Documentación de base de datos
+
+## Mejoras Futuras
+
+- [ ] Notificaciones push para repartidores
+- [ ] Geolocalización real para asignación de pedidos
+- [ ] Sistema de calificaciones
+- [ ] Chat entre empresa y repartidor
+- [ ] Dashboard con métricas y estadísticas
+- [ ] Exportación de reportes
+- [ ] Multi-idioma (i18n)
 
 ## Recursos
 
@@ -378,18 +526,13 @@ npx cap add android
 - [Documentación de Supabase](https://supabase.com/docs)
 - [Lucide Icons](https://lucide.dev/)
 
----
+## Licencia
 
-## Despliegue
+[Especificar licencia si aplica]
 
-### Web
-La aplicación web se puede desplegar en cualquier servidor estático o CDN.
+## Contribución
 
-### APK
-1. Compilar APK en Android Studio
-2. Firmar APK para producción
-3. Distribuir a repartidores
-4. O publicar en Google Play Store
+[Instrucciones de contribución si aplica]
 
 ---
 

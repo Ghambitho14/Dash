@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authenticateUser } from '../services/authService';
+import { logger } from '../utils/logger';
 
 /**
  * Hook para gestionar la lógica de login
@@ -42,7 +43,7 @@ export function useLogin(onLogin) {
 			onLogin(user);
 		} catch (err) {
 			setError(err.message || 'Error al iniciar sesión. Intenta nuevamente.');
-			console.error('Error en login:', err);
+			logger.error('Error en login:', err);
 		} finally {
 			setLoading(false);
 		}

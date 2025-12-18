@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadLocals, saveLocalConfigs } from '../services/localService';
+import { logger } from '../utils/logger';
 
 /**
  * Hook para gestionar locales
@@ -17,7 +18,7 @@ export function useLocals(currentUser) {
 			const loadedLocals = await loadLocals(companyId);
 			setLocalConfigs(loadedLocals);
 		} catch (err) {
-			console.error('Error cargando locales:', err);
+			logger.error('Error cargando locales:', err);
 		} finally {
 			setLoading(false);
 		}
@@ -38,7 +39,7 @@ export function useLocals(currentUser) {
 			setLocalConfigs(updatedLocals);
 			return updatedLocals;
 		} catch (err) {
-			console.error('Error guardando locales:', err);
+			logger.error('Error guardando locales:', err);
 			throw err;
 		}
 	}, [currentUser]);

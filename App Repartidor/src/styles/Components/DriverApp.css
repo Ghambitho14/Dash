@@ -144,6 +144,30 @@
 	background-color: #f9fafb;
 }
 
+.driver-location-warning {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	background-color: #fef3c7;
+	border: 1px solid #fbbf24;
+	border-radius: 0.75rem;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	color: #92400e;
+}
+
+.driver-location-warning svg {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+}
+
+.driver-location-warning p {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
 .driver-empty-state {
 	background-color: white;
 	padding: 2rem;

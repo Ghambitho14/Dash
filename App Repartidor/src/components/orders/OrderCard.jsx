@@ -89,6 +89,11 @@ export function OrderCard({ order, onClick, onDelete }) {
 			<div className="order-card-driver-local">
 				<Package />
 				<span className="order-card-driver-local-text">{order.local}</span>
+				{order.distance !== null && order.distance !== undefined && order.status === 'Pendiente' && (
+					<span className="order-card-driver-distance">
+						{order.distance.toFixed(1)} km
+					</span>
+				)}
 			</div>
 
 			{/* Direcciones Compactas */}

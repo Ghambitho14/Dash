@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Carga locales desde Supabase
@@ -14,7 +15,7 @@ export async function loadLocals(companyId) {
 		if (error) throw error;
 		return data || [];
 	} catch (err) {
-		console.error('Error cargando locales:', err);
+		logger.error('Error cargando locales:', err);
 		throw err;
 	}
 }
@@ -37,7 +38,7 @@ export async function createLocals(localsData, companyId) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error creando locales:', err);
+		logger.error('Error creando locales:', err);
 		throw err;
 	}
 }
@@ -58,7 +59,7 @@ export async function updateLocal(localId, localData) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error actualizando local:', err);
+		logger.error('Error actualizando local:', err);
 		throw err;
 	}
 }
@@ -87,7 +88,7 @@ export async function saveLocalConfigs(configs, companyId) {
 		// Recargar todos los locales
 		return await loadLocals(companyId);
 	} catch (err) {
-		console.error('Error guardando locales:', err);
+		logger.error('Error guardando locales:', err);
 		throw err;
 	}
 }

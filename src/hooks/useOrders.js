@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadOrders, createOrder, deleteOrder } from '../services/orderService';
 import { generatePickupCode } from '../utils/utils';
+import { supabase } from '../utils/supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Hook para gestionar pedidos
@@ -19,7 +21,7 @@ export function useOrders(currentUser) {
 			const loadedOrders = await loadOrders(companyId, localId);
 			setOrders(loadedOrders);
 		} catch (err) {
-			console.error('Error cargando pedidos:', err);
+			logger.error('Error cargando pedidos:', err);
 		} finally {
 			setLoading(false);
 		}
@@ -32,15 +34,41 @@ export function useOrders(currentUser) {
 		}
 	}, [currentUser, fetchOrders]);
 
-	// Recargar pedidos periódicamente
+	// ✅ REALTIME: escuchar cambios en orders para la company del usuario + fallback 60s
 	useEffect(() => {
 		if (!currentUser) return;
 
-		const interval = setInterval(() => {
-			fetchOrders();
-		}, 2000); // Cada 2 segundos
+		const companyId = currentUser.companyId || currentUser.company_id;
+		if (!companyId) return;
 
-		return () => clearInterval(interval);
+		// Carga inicial (por si entras y no hay datos aún)
+		fetchOrders();
+
+		const channel = supabase
+			.channel(`orders-company-${companyId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'orders',
+					filter: `company_id=eq.${companyId}`,
+				},
+				() => {
+					fetchOrders();
+				}
+			)
+			.subscribe();
+
+		// Fallback profesional (por si realtime cae / reconexión / lag)
+		const fallback = setInterval(() => {
+			fetchOrders();
+		}, 60000); // Cada 60 segundos como fallback
+
+		return () => {
+			clearInterval(fallback);
+			supabase.removeChannel(channel);
+		};
 	}, [currentUser, fetchOrders]);
 
 	const handleCreateOrder = useCallback(async (orderData, clients, localConfigs) => {
@@ -80,7 +108,7 @@ export function useOrders(currentUser) {
 			setOrders(prev => [newOrder, ...prev]);
 			return newOrder;
 		} catch (err) {
-			console.error('Error creando pedido:', err);
+			logger.error('Error creando pedido:', err);
 			throw err;
 		}
 	}, [currentUser]);
@@ -94,7 +122,7 @@ export function useOrders(currentUser) {
 			setOrders(prev => prev.filter(o => o.id !== orderId));
 			return true;
 		} catch (err) {
-			console.error('Error eliminando pedido:', err);
+			logger.error('Error eliminando pedido:', err);
 			throw err;
 		}
 	}, [orders]);

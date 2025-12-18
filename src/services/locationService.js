@@ -2,33 +2,6 @@ import { supabase } from '../utils/supabase';
 import { logger } from '../utils/logger';
 
 /**
- * Guarda la ubicación actual del repartidor
- */
-export async function saveDriverLocation(driverId, latitude, longitude, orderId = null) {
-	try {
-		const { data, error } = await supabase
-			.from('driver_locations')
-			.upsert({
-				driver_id: driverId,
-				latitude,
-				longitude,
-				order_id: orderId,
-				updated_at: new Date().toISOString(),
-			}, {
-				onConflict: 'driver_id',
-			})
-			.select()
-			.single();
-
-		if (error) throw error;
-		return data;
-	} catch (err) {
-		logger.error('Error guardando ubicación:', err);
-		throw err;
-	}
-}
-
-/**
  * Obtiene la ubicación actual de un repartidor
  */
 export async function getDriverLocation(driverId) {
@@ -52,11 +25,13 @@ export async function getDriverLocation(driverId) {
  */
 export async function getOrderDriverLocation(orderId) {
 	try {
-		const { data: order } = await supabase
+		const { data: order, error: orderError } = await supabase
 			.from('orders')
 			.select('driver_id')
 			.eq('id', orderId)
 			.single();
+
+		if (orderError) throw orderError;
 
 		if (!order || !order.driver_id) return null;
 
@@ -65,5 +40,30 @@ export async function getOrderDriverLocation(orderId) {
 		logger.error('Error obteniendo ubicación del repartidor del pedido:', err);
 		return null;
 	}
+}
+
+/**
+ * Suscribe a cambios en tiempo real de la ubicación de un repartidor
+ */
+export function subscribeToDriverLocation(driverId, callback) {
+	const channel = supabase
+		.channel(`driver_location:${driverId}`)
+		.on(
+			'postgres_changes',
+			{
+				event: '*',
+				schema: 'public',
+				table: 'driver_locations',
+				filter: `driver_id=eq.${driverId}`,
+			},
+			(payload) => {
+				callback(payload.new);
+			}
+		)
+		.subscribe();
+
+	return () => {
+		supabase.removeChannel(channel);
+	};
 }
 

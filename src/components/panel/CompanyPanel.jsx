@@ -4,10 +4,12 @@ import { UserManagement } from '../users/UserManagement';
 import { OrderList } from '../orders/OrderList';
 import { OrderDetail } from '../orders/OrderDetail';
 import { LocalSettings } from '../locals/LocalSettings';
+import { TrackingPanel } from '../tracking/TrackingPanel';
 import { Modal } from '../ui/Modal';
 import { useCompanyPanel } from '../../hooks/useCompanyPanel';
-import { isAdminOrEmpresarial, getRoleName } from '../../utils/utils';
-import { Package, Store, ChevronDown, Settings, Bell, LogOut, Search, Clock, Menu, X, Building2, Users, UserCog } from 'lucide-react';
+import { isAdminOrEmpresarial, getRoleName, getInitials } from '../../utils/utils';
+import { Package, Store, ChevronDown, Settings, Bell, LogOut, Search, Clock, Menu, X, Building2, Users, UserCog, Plus, Navigation } from 'lucide-react';
+import { logger } from '../../utils/logger';
 import '../../styles/Components/CompanyPanel.css';
 import '../../styles/Components/SettingsModal.css';
 
@@ -23,6 +25,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 		selectedLocal,
 		showLocalDropdown,
 		sidebarOpen,
+		showTrackingPanel,
 		userFilteredOrders,
 		filteredOrders,
 		locales,
@@ -36,6 +39,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 		setSelectedLocal,
 		setShowLocalDropdown,
 		setSidebarOpen,
+		setShowTrackingPanel,
 		handleCreateOrder,
 		handleDeleteOrder,
 		handleSaveLocalConfigs,
@@ -44,10 +48,6 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 	const handleCreateOrderWrapper = (orderData) => handleCreateOrder(orderData, clients);
 	const handleDeleteOrderWrapper = handleDeleteOrder;
 	const handleSaveLocalConfigsWrapper = handleSaveLocalConfigs;
-
-	const getInitials = (name) => {
-		return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-	};
 
 	return (
 		<div className="panel-empresa">
@@ -123,7 +123,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 						title="Notificaciones"
 						onClick={() => {
 							// TODO: Implementar notificaciones
-							console.log('Notificaciones');
+							logger.log('Notificaciones');
 						}}
 					>
 						<Bell />
@@ -261,49 +261,79 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 						<div className="delivery-main-title-row">
 							<h2 className="delivery-main-title">Panel de Pedidos</h2>
 							
-							<div className="delivery-search-bar">
-								<Search className="delivery-search-icon" />
-								<input
-									type="text"
-									className="delivery-search-input"
-									placeholder="Buscar pedidos..."
-								/>
+							<div className="delivery-main-actions">
+								<button
+									onClick={() => setShowCreateForm(true)}
+									className="delivery-button-primary"
+									title="Crear nuevo pedido"
+								>
+									<Plus size={20} />
+									<span>Nuevo Pedido</span>
+								</button>
+								
+								<div className="delivery-search-bar">
+									<Search className="delivery-search-icon" />
+									<input
+										type="text"
+										className="delivery-search-input"
+										placeholder="Buscar pedidos..."
+									/>
+								</div>
 							</div>
 						</div>
 
 						{/* Tabs */}
 						<div className="delivery-tabs">
 							<button
-								onClick={() => setActiveTab('all')}
-								className={`delivery-tab ${activeTab === 'all' ? 'active' : ''}`}
+								onClick={() => {
+									setActiveTab('active');
+									setShowTrackingPanel(false);
+								}}
+								className={`delivery-tab ${activeTab === 'active' && !showTrackingPanel ? 'active' : ''}`}
 							>
-								Todos ({filteredOrders.length})
+								Activos ({userFilteredOrders.filter(o => o.status !== 'Entregado').length})
 							</button>
 							<button
-								onClick={() => setActiveTab('active')}
-								className={`delivery-tab ${activeTab === 'active' ? 'active' : ''}`}
+								onClick={() => {
+									setActiveTab('completed');
+									setShowTrackingPanel(false);
+								}}
+								className={`delivery-tab ${activeTab === 'completed' && !showTrackingPanel ? 'active' : ''}`}
 							>
-								Activos ({filteredOrders.filter(o => o.status !== 'Entregado').length})
+								Completados ({userFilteredOrders.filter(o => o.status === 'Entregado').length})
 							</button>
 							<button
-								onClick={() => setActiveTab('completed')}
-								className={`delivery-tab ${activeTab === 'completed' ? 'active' : ''}`}
+								onClick={() => {
+									setShowTrackingPanel(true);
+									setActiveTab(null);
+								}}
+								className={`delivery-tab ${showTrackingPanel ? 'active' : ''}`}
 							>
-								Completados ({filteredOrders.filter(o => o.status === 'Entregado').length})
+								<Navigation style={{ width: '1rem', height: '1rem', marginRight: '0.5rem' }} />
+								Trackeo
 							</button>
 						</div>
 					</div>
 
-					{/* Orders List */}
-					<div className="delivery-orders-container">
-						<div className="delivery-orders-grid">
-							<OrderList 
-								orders={filteredOrders} 
+					{/* Orders List o Panel de Trackeo */}
+					{showTrackingPanel ? (
+						<div className="delivery-orders-container">
+							<TrackingPanel 
+								orders={userFilteredOrders.filter(order => order.status !== 'Entregado')}
 								onSelectOrder={setSelectedOrder}
-								onDeleteOrder={handleDeleteOrderWrapper}
 							/>
 						</div>
-					</div>
+					) : (
+						<div className="delivery-orders-container">
+							<div className="delivery-orders-grid">
+								<OrderList 
+									orders={filteredOrders} 
+									onSelectOrder={setSelectedOrder}
+									onDeleteOrder={handleDeleteOrderWrapper}
+								/>
+							</div>
+						</div>
+					)}
 				</main>
 			</div>
 

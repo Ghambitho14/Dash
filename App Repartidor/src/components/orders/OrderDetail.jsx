@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, MapPin, Navigation, DollarSign, Clock, Package, AlertCircle } from 'lucide-react';
 import { getStatusIcon, getNextStatus, formatDate, formatPrice } from '../../utils/utils';
 import { PickupCodeModal } from './PickupCodeModal';
+import toast from 'react-hot-toast';
 import '../../styles/Components/OrderDetail.css';
 import { getPrimaryAction, validateOrderForTransition } from './orderStateMachine.jsx';
 
@@ -49,7 +50,7 @@ export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 
 		const check = validateOrderForTransition(order, action.toStatus);
 		if (!check.ok) {
-			alert(check.reason);
+			toast.error(check.reason);
 			return;
 		}
 
@@ -159,6 +160,33 @@ export function OrderDetail({ order, onClose, onAcceptOrder, onUpdateStatus }) {
 						<p className="order-detail-driver-item-text">{order.pickupAddress}</p>
 					</div>
 				</div>
+
+				{/* Mapa del Local o Entrega según el estado */}
+				{(() => {
+					// Si el pedido ya fue retirado, mostrar dirección de entrega
+					const isPickedUp = order.status === 'Producto retirado' || order.status === 'Entregado';
+					const addressToShow = isPickedUp ? order.deliveryAddress : order.localAddress;
+					const labelToShow = isPickedUp ? 'Ubicación de Entrega' : 'Ubicación del Local';
+					
+					if (!addressToShow) return null;
+					
+					return (
+						<div className="order-detail-driver-map-container">
+							<p className="order-detail-driver-map-label">{labelToShow}</p>
+							<div className="order-detail-driver-map">
+								<iframe
+									width="100%"
+									height="100%"
+									style={{ border: 0 }}
+									loading="lazy"
+									allowFullScreen
+									referrerPolicy="no-referrer-when-downgrade"
+									src={`https://www.google.com/maps?q=${encodeURIComponent(addressToShow)}&output=embed`}
+								/>
+							</div>
+						</div>
+					);
+				})()}
 
 				{/* Delivery Address */}
 				<div className="order-detail-driver-item order-detail-driver-item-start">

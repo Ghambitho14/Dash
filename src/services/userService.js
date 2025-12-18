@@ -1,5 +1,6 @@
 import { supabase } from '../utils/supabase';
 import { hashPassword } from '../utils/passwordUtils';
+import { logger } from '../utils/logger';
 
 /**
  * Formatea un usuario de la base de datos al formato de la aplicación
@@ -30,7 +31,7 @@ export async function loadUsers(companyId) {
 		if (error) throw error;
 		return (data || []).map(formatUser);
 	} catch (err) {
-		console.error('Error cargando usuarios:', err);
+		logger.error('Error cargando usuarios:', err);
 		throw err;
 	}
 }
@@ -59,7 +60,7 @@ export async function createUser(userData, companyId, localId = null) {
 		if (error) throw error;
 		return formatUser(data);
 	} catch (err) {
-		console.error('Error creando usuario:', err);
+		logger.error('Error creando usuario:', err);
 		throw err;
 	}
 }
@@ -89,7 +90,7 @@ export async function updateUser(userDbId, userData, localId = null) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error actualizando usuario:', err);
+		logger.error('Error actualizando usuario:', err);
 		throw err;
 	}
 }
@@ -107,7 +108,7 @@ export async function deleteUser(userDbId) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error eliminando usuario:', err);
+		logger.error('Error eliminando usuario:', err);
 		throw err;
 	}
 }

@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Formatea un cliente de la base de datos al formato de la aplicación
@@ -27,7 +28,7 @@ export async function loadClients(companyId) {
 		if (error) throw error;
 		return (data || []).map(formatClient);
 	} catch (err) {
-		console.error('Error cargando clientes:', err);
+		logger.error('Error cargando clientes:', err);
 		throw err;
 	}
 }
@@ -52,7 +53,7 @@ export async function createClient(clientData, companyId, localId) {
 		if (error) throw error;
 		return formatClient(data);
 	} catch (err) {
-		console.error('Error creando cliente:', err);
+		logger.error('Error creando cliente:', err);
 		throw err;
 	}
 }
@@ -75,7 +76,7 @@ export async function updateClient(clientDbId, clientData, localId) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error actualizando cliente:', err);
+		logger.error('Error actualizando cliente:', err);
 		throw err;
 	}
 }
@@ -93,7 +94,7 @@ export async function deleteClient(clientDbId) {
 		if (error) throw error;
 		return true;
 	} catch (err) {
-		console.error('Error eliminando cliente:', err);
+		logger.error('Error eliminando cliente:', err);
 		throw err;
 	}
 }

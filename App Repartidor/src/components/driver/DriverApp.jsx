@@ -6,10 +6,23 @@ import { DriverWallet } from './DriverWallet';
 import { DriverSettings } from './DriverSettings';
 import { supabase } from '../../utils/supabase';
 import { Package, MapPin, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { logger } from '../../utils/logger';
 import '../../styles/Components/DriverApp.css';
 import { validateOrderForTransition } from '../orders/orderStateMachine.jsx';
 
-export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onViewChange }) {
+const PROXIMITY_RADIUS_KM = 5; // Radio de proximidad en kilómetros
+
+export function DriverApp({ 
+	orders, 
+	setOrders, 
+	onReloadOrders, 
+	activeView, 
+	onViewChange, 
+	hasLocation, 
+	locationLoading,
+	isOnline
+}) {
 	const [selectedOrder, setSelectedOrder] = useState(null);
 	const [activeTab, setActiveTab] = useState('available');
 
@@ -61,8 +74,9 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 
 			setSelectedOrder(null);
 			setActiveTab('myOrders');
+			toast.success('Pedido aceptado exitosamente');
 		} catch (err) {
-			alert('Error al aceptar pedido: ' + err.message);
+			toast.error('Error al aceptar pedido: ' + err.message);
 		}
 	};
 
@@ -74,7 +88,7 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 		// ✅ Validación con máquina de estados ANTES de tocar Supabase
 		const check = validateOrderForTransition(order, newStatus);
 		if (!check.ok) {
-			alert(check.reason);
+			toast.error(check.reason);
 			return;
 		}
 
@@ -97,8 +111,9 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 			if (onReloadOrders) {
 				await onReloadOrders();
 			}
+			toast.success('Estado actualizado exitosamente');
 		} catch (err) {
-			alert('Error al actualizar estado: ' + err.message);
+			toast.error('Error al actualizar estado: ' + err.message);
 		}
 	};
 
@@ -150,7 +165,7 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 								notes: 'Revertido automáticamente por timeout',
 							});
 					} catch (err) {
-						console.error('Error revirtiendo pedido:', err);
+						logger.error('Error revirtiendo pedido:', err);
 					}
 				}
 
@@ -228,19 +243,46 @@ export function DriverApp({ orders, setOrders, onReloadOrders, activeView, onVie
 						</div>
 
 						{activeTab === 'available' ? (
-							availableOrders.length > 0 ? (
-								<OrderList
-									orders={availableOrders}
-									onSelectOrder={setSelectedOrder}
-									onDeleteOrder={handleDeleteOrder}
-								/>
-							) : (
-								<div className="driver-empty-state">
-									<MapPin className="driver-empty-icon" />
-									<p className="driver-empty-title">No hay pedidos disponibles</p>
-									<p className="driver-empty-text">No hay pedidos pendientes cerca de tu ubicación</p>
-								</div>
-							)
+							<>
+								{!isOnline && (
+									<div className="driver-location-warning">
+										<MapPin />
+										<p>Activa el botón "Conectado" en la parte superior para activar tu ubicación GPS y ver pedidos cercanos (radio de {PROXIMITY_RADIUS_KM} km)</p>
+									</div>
+								)}
+								{isOnline && !hasLocation && locationLoading && (
+									<div className="driver-location-warning">
+										<MapPin />
+										<p>Obteniendo tu ubicación GPS...</p>
+									</div>
+								)}
+								{isOnline && !hasLocation && !locationLoading && (
+									<div className="driver-location-warning">
+										<MapPin />
+										<p>No se pudo obtener tu ubicación GPS. Verifica los permisos de ubicación en tu dispositivo.</p>
+									</div>
+								)}
+								{availableOrders.length > 0 ? (
+									<OrderList
+										orders={availableOrders}
+										onSelectOrder={setSelectedOrder}
+										onDeleteOrder={handleDeleteOrder}
+									/>
+								) : (
+									<div className="driver-empty-state">
+										<MapPin className="driver-empty-icon" />
+										<p className="driver-empty-title">No hay pedidos disponibles</p>
+										<p className="driver-empty-text">
+											{!isOnline
+												? 'Activa el botón "Conectado" para activar tu ubicación GPS y ver pedidos cercanos'
+												: hasLocation 
+													? `No hay pedidos pendientes dentro de ${PROXIMITY_RADIUS_KM} km de tu ubicación`
+													: 'Obteniendo tu ubicación GPS...'
+											}
+										</p>
+									</div>
+								)}
+							</>
 						) : (
 							myOrders.length > 0 ? (
 								<OrderList

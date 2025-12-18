@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadUsers, createUser, updateUser, deleteUser } from '../services/userService';
+import { logger } from '../utils/logger';
 
 /**
  * Hook para gestionar usuarios
@@ -17,7 +18,7 @@ export function useUsers(currentUser, localConfigs) {
 			const loadedUsers = await loadUsers(companyId);
 			setUsers(loadedUsers);
 		} catch (err) {
-			console.error('Error cargando usuarios:', err);
+			logger.error('Error cargando usuarios:', err);
 		} finally {
 			setLoading(false);
 		}
@@ -38,7 +39,7 @@ export function useUsers(currentUser, localConfigs) {
 			setUsers(prev => [newUser, ...prev]);
 			return newUser;
 		} catch (err) {
-			console.error('Error creando usuario:', err);
+			logger.error('Error creando usuario:', err);
 			throw err;
 		}
 	}, [currentUser, localConfigs]);
@@ -63,7 +64,7 @@ export function useUsers(currentUser, localConfigs) {
 			await fetchUsers(); // Recargar todos los usuarios
 			return true;
 		} catch (err) {
-			console.error('Error actualizando usuario:', err);
+			logger.error('Error actualizando usuario:', err);
 			throw err;
 		}
 	}, [currentUser, users, localConfigs, fetchUsers]);
@@ -85,7 +86,7 @@ export function useUsers(currentUser, localConfigs) {
 			setUsers(prev => prev.filter(u => u.id !== userId));
 			return true;
 		} catch (err) {
-			console.error('Error eliminando usuario:', err);
+			logger.error('Error eliminando usuario:', err);
 			throw err;
 		}
 	}, [currentUser, users]);

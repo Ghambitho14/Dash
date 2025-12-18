@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, Truck, Package, CheckCircle2 } from 'lucide-react';
-import '../styles/utils/statusUtils.css';
 
 // ============================================
 // UTILIDADES DE FECHAS
@@ -43,6 +42,17 @@ export function formatRelativeTime(date, currentTime = new Date()) {
 	});
 }
 
+// Obtener iniciales de un nombre
+export function getInitials(name) {
+	if (!name) return '??';
+	return name
+		.split(' ')
+		.map(n => n[0])
+		.join('')
+		.toUpperCase()
+		.slice(0, 2);
+}
+
 // Hook para tiempo en tiempo real
 export function useCurrentTime() {
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -66,20 +76,18 @@ export function formatPrice(price) {
 }
 
 // ============================================
+// UTILIDADES DE CÓDIGOS
+// ============================================
+
+// Generar código de retiro de 6 dígitos
+export function generatePickupCode() {
+	return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// ============================================
 // UTILIDADES DE ESTADOS
 // ============================================
 
-// Obtener color CSS según estado
-export function getStatusColor(status) {
-	const colors = {
-		'Pendiente': 'status-pendiente',
-		'Asignado': 'status-asignado',
-		'En camino al retiro': 'status-en-camino-al-retiro',
-		'Producto retirado': 'status-producto-retirado',
-		'Entregado': 'status-entregado',
-	};
-	return colors[status] || 'status-default';
-}
 
 // Obtener icono según estado
 export function getStatusIcon(status) {
@@ -93,14 +101,42 @@ export function getStatusIcon(status) {
 	return icons[status] || Clock;
 }
 
-// Obtener siguiente estado
-export function getNextStatus(currentStatus) {
-	const nextStatuses = {
-		'Asignado': 'En camino al retiro',
-		'En camino al retiro': 'Producto retirado',
-		'Producto retirado': 'Entregado',
+
+// Formatear estado para vista de empresa
+export function formatStatusForCompany(status) {
+	if (status === 'Producto retirado') {
+		return 'Producto retirado, en camino';
+	}
+	return status;
+}
+
+// ============================================
+// UTILIDADES DE ROLES
+// ============================================
+
+// Verificar si es admin o CEO
+export function isAdminOrEmpresarial(role) {
+	return role === 'admin' || role === 'empresarial';
+}
+
+// Obtener nombre legible del rol
+export function getRoleName(role) {
+	const names = {
+		'empresarial': 'CEO',
+		'admin': 'Administrador',
+		'local': 'Local',
 	};
-	return nextStatuses[currentStatus] || null;
+	return names[role] || role;
+}
+
+// ============================================
+// UTILIDADES DE LOCALES
+// ============================================
+
+// Obtener dirección de un local
+export function getLocalAddress(localName, localConfigs) {
+	const local = localConfigs.find(l => l.name === localName);
+	return local?.address || '';
 }
 
 // ============================================
@@ -128,7 +164,7 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Geocodifica una dirección usando Nominatim (OpenStreetMap)
+ * Geocodifica una dirección usando Google Maps Geocoding API
  * @param {string} address - Dirección a geocodificar
  * @returns {Promise<{lat: number, lon: number} | null>} Coordenadas o null si falla
  */
@@ -137,136 +173,55 @@ export async function geocodeAddress(address) {
 		return null;
 	}
 
-	try {
-		// Usar Nominatim (OpenStreetMap) - gratuito, sin API key
-		const response = await fetch(
-			`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
-			{
-				headers: {
-					'User-Agent': 'DeliveryApp/1.0' // Requerido por Nominatim
-				}
-			}
-		);
-
-		if (!response.ok) {
-			throw new Error('Error en geocodificación');
-		}
-
-		const data = await response.json();
-		
-		if (data && data.length > 0) {
-			return {
-				lat: parseFloat(data[0].lat),
-				lon: parseFloat(data[0].lon)
-			};
-		}
-
+	const apiKey = import.meta.env.VITE_API_KEY_MAPS;
+	if (!apiKey) {
+		console.warn('VITE_API_KEY_MAPS no configurada, no se puede geocodificar');
 		return null;
+	}
+
+	// Esperar a que Google Maps esté disponible (máximo 3 segundos)
+	if (!window.google || !window.google.maps) {
+		await new Promise((resolve) => {
+			let attempts = 0;
+			const maxAttempts = 30; // 3 segundos (30 * 100ms)
+			const checkGoogle = setInterval(() => {
+				attempts++;
+				if (window.google && window.google.maps && window.google.maps.Geocoder) {
+					clearInterval(checkGoogle);
+					resolve();
+				} else if (attempts >= maxAttempts) {
+					// Timeout después de 3 segundos
+					clearInterval(checkGoogle);
+					resolve();
+				}
+			}, 100);
+		});
+	}
+
+	if (!window.google || !window.google.maps || !window.google.maps.Geocoder) {
+		return null;
+	}
+
+	try {
+		const geocoder = new window.google.maps.Geocoder();
+		
+		return new Promise((resolve) => {
+			geocoder.geocode({ address: address }, (results, status) => {
+				if (status === 'OK' && results && results.length > 0) {
+					const location = results[0].geometry.location;
+					resolve({
+						lat: location.lat(),
+						lon: location.lng()
+					});
+				} else {
+					// Error silencioso para geocodificación (no crítico)
+					resolve(null);
+				}
+			});
+		});
 	} catch (error) {
 		// Error silencioso para geocodificación (no crítico)
 		return null;
 	}
-}
-
-/**
- * Verifica si Capacitor está disponible (solo en runtime)
- * @returns {Promise<{Geolocation: any, Capacitor: any} | null>}
- */
-async function getCapacitorModules() {
-	// Solo intentar cargar Capacitor si estamos en un entorno que lo soporta
-	// Verificar si window.Capacitor existe (se carga automáticamente en apps nativas)
-	if (typeof window === 'undefined' || !window.Capacitor) {
-		// No estamos en una app nativa, no intentar cargar Capacitor
-		return null;
-	}
-	
-	try {
-		// Usar import dinámico con string literal para evitar análisis estático
-		// Vite ignorará esto si el módulo no está disponible
-		const geolocationModule = '@capacitor/geolocation';
-		const coreModule = '@capacitor/core';
-		
-		const [geolocationImport, coreImport] = await Promise.all([
-			import(/* @vite-ignore */ geolocationModule),
-			import(/* @vite-ignore */ coreModule)
-		]);
-		
-		return {
-			Geolocation: geolocationImport.Geolocation,
-			Capacitor: coreImport.Capacitor
-		};
-	} catch (err) {
-		// Capacitor no está disponible (estamos en web o módulos no instalados)
-		return null;
-	}
-}
-
-/**
- * Obtiene la ubicación GPS actual del usuario
- * Usa Capacitor Geolocation en móvil, fallback a Web API en navegador
- * @returns {Promise<{lat: number, lon: number} | null>} Coordenadas o null si falla
- */
-export async function getCurrentLocation() {
-	// Intentar usar Capacitor si está disponible
-	const capacitorModules = await getCapacitorModules();
-	
-	if (capacitorModules) {
-		const { Geolocation, Capacitor } = capacitorModules;
-		
-		try {
-			if (Capacitor.isNativePlatform()) {
-				// Verificar permisos primero
-				const permissionStatus = await Geolocation.checkPermissions();
-				
-				if (permissionStatus.location !== 'granted') {
-					// Solicitar permisos
-					const requestResult = await Geolocation.requestPermissions();
-					if (requestResult.location !== 'granted') {
-						return null;
-					}
-				}
-				
-				// Obtener ubicación con Capacitor
-				const position = await Geolocation.getCurrentPosition({
-					enableHighAccuracy: true,
-					timeout: 10000,
-					maximumAge: 0
-				});
-				
-				return {
-					lat: position.coords.latitude,
-					lon: position.coords.longitude
-				};
-			}
-		} catch (err) {
-			// Si falla Capacitor, continuar con Web API
-		}
-	}
-	
-	// Fallback a Web Geolocation API (navegador)
-	return new Promise((resolve) => {
-		if (!navigator.geolocation) {
-			resolve(null);
-			return;
-		}
-
-		navigator.geolocation.getCurrentPosition(
-			(position) => {
-				resolve({
-					lat: position.coords.latitude,
-					lon: position.coords.longitude
-				});
-			},
-			(error) => {
-				// Error silencioso para ubicación GPS (no crítico)
-				resolve(null);
-			},
-			{
-				enableHighAccuracy: true,
-				timeout: 10000,
-				maximumAge: 0
-			}
-		);
-	});
 }
 

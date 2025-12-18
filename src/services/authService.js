@@ -1,5 +1,6 @@
 import { supabase } from '../utils/supabase';
 import { verifyPassword } from '../utils/passwordUtils';
+import { logger } from '../utils/logger';
 
 /**
  * Autentica un usuario empresarial
@@ -65,7 +66,7 @@ export async function authenticateUser(username, password) {
 			_dbId: data.id,
 		};
 	} catch (err) {
-		console.error('Error en autenticación:', err);
+		logger.error('Error en autenticación:', err);
 		throw err;
 	}
 }
