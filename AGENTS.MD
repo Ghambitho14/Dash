@@ -8,9 +8,9 @@ Este documento proporciona información esencial para agentes de IA que trabajan
 
 ### Descripción
 Sistema de delivery con tres aplicaciones principales:
-1. **DeliveryApp (App Empresarial)**: Aplicación web para empresas (`src/`)
+1. **DeliveryApp (App Empresarial)**: Aplicación web para empresas (`Panelempresa/src/`)
 2. **Panel Admin**: Panel de administración web (`Paneladmin/`)
-3. **App Repartidor**: Aplicación híbrida web + Android (`App Repartidor/`)
+3. **App Repartidor**: Aplicación híbrida web + Android (`PanelRepartidor/`)
 
 ### Stack Tecnológico Principal
 - **Frontend**: React 18.2.0 / 19.2.0
@@ -60,21 +60,18 @@ Sistema de delivery con tres aplicaciones principales:
 
 ```
 App/
-├── src/                          # DeliveryApp (App Empresarial) - Solo Web
-│   ├── components/               # Componentes React (solo UI/presentación)
-│   ├── hooks/                    # Hooks personalizados (lógica de negocio)
-│   ├── services/                 # Servicios de API (comunicación con Supabase)
-│   ├── styles/                   # Estilos CSS
-│   │   └── Components/           # Estilos por componente
-│   ├── utils/                    # Utilidades y helpers
-│   ├── types/                    # Tipos y estructuras
-│   ├── App.jsx                   # Componente raíz
-│   └── main.jsx                  # Punto de entrada
-├── Paneladmin/                   # Panel Admin - Solo Web
-├── App Repartidor/               # App Repartidor - Web + APK Android
-├── Database/                     # Scripts SQL y documentación
-├── server.js                     # Servidor Express unificado
-└── package.json                  # Configuración principal
+├── Panelempresa/                  # DeliveryApp (App Empresarial) - Solo Web
+│   └── src/                       # Código fuente de la aplicación
+│       ├── components/            # Componentes React (solo UI/presentación)
+│       ├── hooks/                 # Hooks personalizados (lógica de negocio)
+│       ├── services/              # Servicios de API (comunicación con Supabase)
+│       ├── styles/                # Estilos CSS
+│       ├── utils/                 # Utilidades y helpers
+│       └── types/                  # Tipos y estructuras
+├── Paneladmin/                    # Panel Admin - Solo Web
+├── PanelRepartidor/               # App Repartidor - Web + APK Android
+├── Database/                      # Scripts SQL y documentación
+└── CHECKLIST_PRODUCCION.md        # Checklist para producción
 ```
 
 ---
@@ -82,7 +79,7 @@ App/
 ## Aplicaciones del Sistema
 
 ### 1. DeliveryApp (App Empresarial)
-- **Ubicación**: `src/`
+- **Ubicación**: `Panelempresa/src/`
 - **Puerto**: 5173 (desarrollo)
 - **Propósito**: Gestión de pedidos, clientes, usuarios y locales
 - **Componentes clave**: `CompanyPanel.jsx`, `Login.jsx`, `OrderList.jsx`, `CreateOrderForm.jsx`, `CompanyLayout.jsx`
@@ -104,7 +101,7 @@ App/
 - **Componentes clave**: `Dashboard.jsx`, `Login.jsx`
 
 ### 3. App Repartidor
-- **Ubicación**: `App Repartidor/`
+- **Ubicación**: `PanelRepartidor/`
 - **Puerto**: 5175 (desarrollo)
 - **Propósito**: Aceptar pedidos, actualizar estados, gestionar entregas
 - **Componentes clave**: `DriverApp.jsx`, `Login.jsx`, `OrderList.jsx`, `PickupCodeModal.jsx`
@@ -189,7 +186,7 @@ App/
 ### Desarrollo
 ```bash
 # App Empresarial
-cd src
+cd Panelempresa
 npm run dev          # Puerto 5173
 
 # Panel Admin
@@ -197,7 +194,7 @@ cd Paneladmin
 npm run dev          # Puerto 5174
 
 # App Repartidor
-cd "App Repartidor"
+cd PanelRepartidor
 npm run dev          # Puerto 5175
 ```
 
@@ -213,7 +210,7 @@ npm run start:prod   # Compila y inicia
 
 ### App Repartidor - APK
 ```bash
-cd "App Repartidor"
+cd PanelRepartidor
 build-apk.bat        # Windows
 build-apk.sh         # Linux/Mac
 npm run cap:open:android  # Abre Android Studio
@@ -224,8 +221,11 @@ npm run cap:open:android  # Abre Android Studio
 ## Archivos de Referencia
 
 - `ARCHITECTURE.md`: Documentación completa de arquitectura
-- `Database/README.md`: Documentación de base de datos
-- `User.md`: Información de usuarios
+- `Panelempresa/Database/README.md`: Documentación de base de datos
+- `Panelempresa/README.md`: Documentación general del proyecto
+- `PanelRepartidor/README.md`: Documentación de App Repartidor
+- `Paneladmin/README.md`: Documentación de Panel Admin
+- `CHECKLIST_PRODUCCION.md`: Checklist para producción
 
 ---
 

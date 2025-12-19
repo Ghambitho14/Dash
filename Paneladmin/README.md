@@ -256,6 +256,16 @@ Esta aplicación se sirve junto con la App Empresarial en el servidor unificado:
 
 ---
 
+## Documentación Adicional
+
+- `../ARCHITECTURE.md`: Documentación completa de arquitectura (en la raíz del proyecto)
+- `../AGENTS.MD`: Guía para agentes de IA (en la raíz del proyecto)
+- `../Panelempresa/README.md`: Documentación general del proyecto
+- `../Panelempresa/Database/README.md`: Documentación de base de datos
+- `../CHECKLIST_PRODUCCION.md`: Checklist para producción
+
+---
+
 **Versión**: 1.0.0  
 **Última actualización**: 2024
 

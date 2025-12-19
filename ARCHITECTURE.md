@@ -8,12 +8,13 @@ Este documento describe la arquitectura completa del sistema de delivery, incluy
 
 ```
 App/
-├── src/                          # DeliveryApp (App Empresarial) - Solo Web
-├── Paneladmin/                   # Panel Admin - Solo Web
-├── App Repartidor/               # App Repartidor - Web + APK Android
-├── Database/                     # Scripts SQL y documentación de BD
-├── server.js                     # Servidor Express unificado
-└── package.json                  # Configuración principal
+├── Panelempresa/                  # DeliveryApp (App Empresarial) - Solo Web
+│   └── src/                       # Código fuente
+├── Paneladmin/                    # Panel Admin - Solo Web
+├── PanelRepartidor/               # App Repartidor - Web + APK Android
+├── Database/                      # Scripts SQL y documentación de BD
+├── CHECKLIST_PRODUCCION.md        # Checklist para producción
+└── package.json                   # Configuración principal (si existe)
 ```
 
 ---
@@ -21,7 +22,7 @@ App/
 ## Aplicaciones del Sistema
 
 ### 1. **DeliveryApp (App Empresarial)**
-**Ubicación**: `src/`  
+**Ubicación**: `Panelempresa/src/`  
 **Tipo**: Aplicación Web (React + Vite)  
 **Plataforma**: Solo Web (NO compila como APK)  
 **Puerto Desarrollo**: 5173 (por defecto)
@@ -125,7 +126,7 @@ Panel de administración para superadministradores. Permite crear empresas, repa
 ---
 
 ### 3. **App Repartidor**
-**Ubicación**: `App Repartidor/`  
+**Ubicación**: `PanelRepartidor/`  
 **Tipo**: Aplicación Híbrida (React + Capacitor)  
 **Plataforma**: Web + APK Android  
 **Puerto Desarrollo**: 5175 (o siguiente disponible)
@@ -371,7 +372,7 @@ npm run start:prod     # Compila y inicia servidor
 **⚠️ IMPORTANTE - Seguridad de Contraseñas**:
 - Actualmente las contraseñas se almacenan en texto plano en la base de datos
 - **Se recomienda implementar hashing de contraseñas (bcrypt) antes de producción**
-- Ver `MEJORAS.md` para detalles sobre implementación de seguridad
+- Ver `CHECKLIST_PRODUCCION.md` para detalles sobre implementación de seguridad
 
 ### Código de Retiro
 - Código único de 6 dígitos por pedido
@@ -385,6 +386,7 @@ npm run start:prod     # Compila y inicia servidor
 
 ### App Empresarial
 ```bash
+cd Panelempresa
 npm run build        # Compila para web
 npm run start        # Servidor de producción
 ```
@@ -397,7 +399,7 @@ npm run build        # Compila para web
 
 ### App Repartidor
 ```bash
-cd "App Repartidor"
+cd PanelRepartidor
 npm run build        # Compila para web
 build-apk.bat        # Compila y prepara para APK
 npm run cap:open:android  # Abre Android Studio
@@ -407,7 +409,7 @@ npm run cap:open:android  # Abre Android Studio
 
 ## Estructura de Archivos Detallada
 
-### App Empresarial (`src/`)
+### App Empresarial (`Panelempresa/src/`)
 ```
 src/
 ├── App.jsx                    # Componente raíz
@@ -459,9 +461,9 @@ src/
     └── utils.js
 ```
 
-### App Repartidor (`App Repartidor/src/`)
+### App Repartidor (`PanelRepartidor/src/`)
 ```
-App Repartidor/src/
+src/
 ├── App.jsx                    # Componente raíz
 ├── main.jsx                   # Punto de entrada
 ├── components/                # Componentes React
@@ -519,7 +521,7 @@ Componente → Hook → Service → Supabase
 - **Sincronización con Supabase**:
   - **App Repartidor**: Implementa Supabase Realtime + fallback de 60s
   - **DeliveryApp**: Usa polling cada 2 segundos (se recomienda implementar Realtime)
-  - Ver `MEJORAS.md` para optimizaciones de performance
+  - Ver `CHECKLIST_PRODUCCION.md` para optimizaciones de performance
 
 ### Componentes
 - Componentes funcionales con Hooks
@@ -530,7 +532,7 @@ Componente → Hook → Service → Supabase
 ### Servicios
 - Funciones puras que manejan comunicación con Supabase
 - Formateo de datos entre formato BD y formato aplicación
-- Manejo de errores (actualmente inconsistente - ver `MEJORAS.md`)
+- Manejo de errores (actualmente inconsistente - ver `CHECKLIST_PRODUCCION.md`)
 - Reutilizables entre diferentes hooks y componentes
 - **Nota**: Algunos servicios usan `console.error` directamente - se recomienda centralizar logging
 
@@ -575,7 +577,7 @@ VITE_ANNON_KEY=tu_anon_key
 ### DeliveryApp
 - **No implementado**: Actualmente usa polling cada 2 segundos
 - **Recomendación**: Implementar Supabase Realtime similar a App Repartidor
-- Ver `MEJORAS.md` sección "Performance" para detalles
+- Ver `CHECKLIST_PRODUCCION.md` sección "Performance" para detalles
 
 ---
 
@@ -588,11 +590,11 @@ VITE_ANNON_KEY=tu_anon_key
 - No hay Error Boundaries de React
 
 ### Archivos con Manejo de Errores
-- `src/App.jsx`: Usa `toast` correctamente
-- `App Repartidor/src/components/DriverApp.jsx`: Usa `alert()`
-- `App Repartidor/src/App.jsx`: Usa `alert()`
+- `Panelempresa/src/App.jsx`: Usa `toast` correctamente
+- `PanelRepartidor/src/components/DriverApp.jsx`: Usa `alert()`
+- `PanelRepartidor/src/App.jsx`: Usa `alert()`
 
-**Recomendación**: Estandarizar manejo de errores. Ver `MEJORAS.md` sección "Código y Arquitectura".
+**Recomendación**: Estandarizar manejo de errores. Ver `CHECKLIST_PRODUCCION.md` sección "Código y Arquitectura".
 
 ---
 
@@ -607,7 +609,7 @@ VITE_ANNON_KEY=tu_anon_key
 - [ ] Exportación de reportes
 - [ ] Multi-idioma (i18n)
 
-### Técnicas (Ver `MEJORAS.md` para detalles completos)
+### Técnicas (Ver `CHECKLIST_PRODUCCION.md` para detalles completos)
 - [ ] Implementar hashing de contraseñas (CRÍTICO)
 - [ ] Implementar Supabase Realtime en DeliveryApp
 - [ ] Optimizar componentes React (React.memo, useMemo)
@@ -622,10 +624,12 @@ VITE_ANNON_KEY=tu_anon_key
 
 ## Documentación Adicional
 
-- `MEJORAS.md`: Análisis completo de áreas de mejora y plan de acción
 - `AGENTS.MD`: Guía para agentes de IA trabajando en el proyecto
-- `Database/README.md`: Documentación de base de datos
-- `README.md`: Documentación general del proyecto
+- `Panelempresa/Database/README.md`: Documentación de base de datos
+- `Panelempresa/README.md`: Documentación general del proyecto
+- `PanelRepartidor/README.md`: Documentación de App Repartidor
+- `Paneladmin/README.md`: Documentación de Panel Admin
+- `CHECKLIST_PRODUCCION.md`: Checklist para producción
 
 ---
 
@@ -644,7 +648,7 @@ VITE_ANNON_KEY=tu_anon_key
 6. **Logging**: Eliminar console.logs de producción, crear logger condicional
 7. **Validaciones**: Agregar validaciones robustas en formularios
 
-**Ver `MEJORAS.md` para análisis completo con ubicaciones exactas, soluciones y plan de acción detallado.**
+**Ver `CHECKLIST_PRODUCCION.md` para análisis completo con ubicaciones exactas, soluciones y plan de acción detallado.**
 
 ---
 
