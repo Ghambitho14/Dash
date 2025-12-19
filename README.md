@@ -31,11 +31,7 @@ App/
 │   ├── src/                   # Código fuente
 │   ├── android/               # Proyecto Android (Capacitor)
 │   └── README.md              # Documentación específica
-├── ARCHITECTURE.md            # Documentación completa de arquitectura
-├── AGENTS.MD                  # Guía para agentes de IA
-├── DEPLOY_AWS.md              # Guía de despliegue en AWS
-├── CHECKLIST_COMPLETAR_APPS.md  # Checklist para completar apps
-└── README.md                  # Este archivo
+
 ```
 
 ---
@@ -96,16 +92,6 @@ npm install
 cd ../PanelRepartidor
 npm install
 ```
-
-### 4. Configurar base de datos
-
-Ejecuta los scripts SQL en Supabase (en orden):
-- `Panelempresa/Database/01_create_database_supabase.sql`
-- `Panelempresa/Database/02_insert_initial_data.sql`
-- `Panelempresa/Database/04_create_driver_locations_table.sql`
-- `Panelempresa/Database/05_create_registration_requests_table.sql`
-
----
 
 ## Desarrollo
 
@@ -259,22 +245,6 @@ npm run cap:open:android
 
 ---
 
-## Base de Datos (Supabase)
-
-### Tablas Principales
-
-- `companies`: Información de empresas
-- `company_users`: Usuarios de empresas (roles: empresarial, admin, local)
-- `drivers`: Repartidores
-- `locals`: Locales/sucursales
-- `clients`: Clientes
-- `orders`: Pedidos
-- `order_status_history`: Historial de cambios de estado
-- `driver_locations`: Ubicaciones GPS de repartidores
-- `superadmins`: Superadministradores
-- `driver_registration_requests`: Solicitudes de registro de repartidores
-- `company_registration_requests`: Solicitudes de registro de empresas
-
 ### Estados de Pedidos
 
 1. **Pendiente**: Pedido creado, sin asignar
@@ -286,62 +256,6 @@ npm run cap:open:android
 ---
 
 ## Flujos Principales
-
-### Flujo de Creación de Pedido
-
-1. Usuario empresarial crea pedido en Panelempresa
-2. Se genera código de retiro único (6 dígitos)
-3. Pedido se guarda con estado "Pendiente"
-4. PanelRepartidor recibe el pedido en tiempo real (Supabase Realtime)
-5. Repartidor acepta → Estado cambia a "Asignado"
-6. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
-7. Repartidor ingresa código → Estado cambia a "Producto retirado"
-8. Repartidor entrega → Estado cambia a "Entregado"
-
-### Flujo de Autenticación
-
-**Panelempresa**: Consulta `company_users` con `active = true`
-**Paneladmin**: Consulta `superadmins` con `active = true`
-**PanelRepartidor**: Consulta `drivers` con `active = true`
-
-Las sesiones se guardan en:
-- **Web**: localStorage
-- **Android**: Capacitor Preferences (persistente)
-
----
-
-## Despliegue
-
-### Opciones de Despliegue
-
-1. **AWS Amplify** (Recomendado para empezar)
-   - CI/CD automático
-   - HTTPS automático
-   - Ver `DEPLOY_AWS.md` para detalles
-
-2. **S3 + CloudFront** (Más control)
-   - Más económico a gran escala
-   - Ver `DEPLOY_AWS.md` para detalles
-
-3. **EC2 + Nginx** (Control total)
-   - Control completo del servidor
-   - HTTPS con Let's Encrypt
-   - Ver `DEPLOY_AWS.md` para detalles
-
-### Variables de Entorno en Producción
-
-Las variables `VITE_*` se inyectan en **build time**, no runtime.
-
-**Opción A: Archivo .env.production**
-```env
-VITE_PROJECT_URL=https://tu-proyecto.supabase.co
-VITE_ANNON_KEY=tu-anon-key
-```
-
-**Opción B: Variables en plataforma de despliegue**
-- AWS Amplify: Environment variables
-- S3/EC2: Variables antes de `npm run build`
-
 ---
 
 ## Scripts Disponibles
@@ -432,84 +346,4 @@ Componente → Hook → Servicio → Supabase
 
 ---
 
-## Solución de Problemas
-
-### Error: "Cannot find module '@supabase/supabase-js'"
-```bash
-npm install
-```
-
-### Error: "VITE_PROJECT_URL is not defined"
-Verifica que el archivo `.env` existe y tiene las variables correctas.
-
-### Error de autenticación
-Verifica que:
-- El usuario exista en la tabla correspondiente
-- El campo `active` sea `true`
-- Las credenciales sean correctas
-
-### Error al compilar APK
-- Verifica que Android Studio esté instalado
-- Verifica que Java JDK esté configurado
-- Verifica que Android SDK esté instalado
-- Ejecuta: `npx cap sync`
-
----
-
-## Documentación Adicional
-
-- `ARCHITECTURE.md`: Documentación completa de arquitectura
-- `AGENTS.MD`: Guía para agentes de IA trabajando en el proyecto
-- `DEPLOY_AWS.md`: Guía completa de despliegue en AWS
-- `CHECKLIST_COMPLETAR_APPS.md`: Checklist para completar apps
-- `Panelempresa/README.md`: Documentación de App Empresarial
-- `Panelempresa/Database/README.md`: Documentación de base de datos
-- `Paneladmin/README.md`: Documentación de Panel Admin
-- `PanelRepartidor/README.md`: Documentación de App Repartidor
-
----
-
-## Mejoras Futuras
-
-### Funcionalidades
-- Notificaciones push para repartidores
-- Sistema de calificaciones
-- Chat entre empresa y repartidor
-- Dashboard con métricas y estadísticas
-- Exportación de reportes
-- Multi-idioma (i18n)
-
-### Técnicas
-- Error Boundaries de React
-- Optimización de componentes (React.memo, useMemo)
-- Testing (unitario, integración, E2E)
-- Migración gradual a TypeScript
-
----
-
-## Convenciones de Código
-
-- **Indentación**: Tabulación (no espacios)
-- **Componentes**: PascalCase (`CompanyPanel.jsx`)
-- **Hooks**: Prefijo `use` (`useAuth.js`)
-- **Servicios**: Sufijo `Service` (`authService.js`)
-- **Estilos**: CSS Modules por componente
-- **Nombres de archivos**: Mismo nombre que componente
-
----
-
-## Licencia
-
-[Especificar licencia si aplica]
-
----
-
-## Contacto y Soporte
-
-[Información de contacto si aplica]
-
----
-
-**Versión**: 1.0.0  
-**Última actualización**: Diciembre 2024
 
