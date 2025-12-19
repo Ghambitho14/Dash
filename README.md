@@ -22,7 +22,6 @@ Todas las aplicaciones están integradas con Supabase como base de datos y backe
 App/
 ├── Panelempresa/              # App Empresarial - Solo Web
 │   ├── src/                   # Código fuente
-│   ├── Database/              # Scripts SQL y documentación
 │   └── README.md              # Documentación específica
 ├── Paneladmin/                # Panel Admin - Solo Web
 │   ├── src/                   # Código fuente
