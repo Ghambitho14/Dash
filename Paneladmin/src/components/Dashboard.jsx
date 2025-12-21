@@ -1,17 +1,38 @@
 import { useState, useEffect } from 'react';
-import { Building2, UserPlus, LogOut, Plus, X, Edit2 } from 'lucide-react';
+import { Building2, UserPlus, LogOut, Plus, X, Edit2, FileText, CheckCircle, XCircle, Trash2, MapPin } from 'lucide-react';
 import { supabase } from '../utils/supabase';
+import { hashPassword } from '../utils/passwordUtils';
+import { validateRUT, validateChileanPhone, validateEmail, formatRUT, formatChileanPhone, checkRUTExistsInDrivers, checkEmailExistsInDrivers, checkPhoneExistsInDrivers } from '../utils/validationUtils';
+import {
+	loadCompanyRegistrationRequests,
+	loadDriverRegistrationRequests,
+	approveCompanyRequest,
+	rejectCompanyRequest,
+	approveDriverRequest,
+	rejectDriverRequest,
+} from '../services/registrationRequestsService';
+import { useDriverLocations } from '../hooks/useDriverLocations';
+import { useToast } from '../hooks/useToast';
 import '../style/Dashboard.css';
 
 export function Dashboard({ admin, onLogout }) {
-	const [activeTab, setActiveTab] = useState('companies');
+	const { showSuccess, showError, showWarning } = useToast();
+	const [activeTab, setActiveTab] = useState('requests');
 	const [companies, setCompanies] = useState([]);
 	const [drivers, setDrivers] = useState([]);
+	const [companyRequests, setCompanyRequests] = useState([]);
+	const [driverRequests, setDriverRequests] = useState([]);
 	const [showCompanyForm, setShowCompanyForm] = useState(false);
 	const [showDriverForm, setShowDriverForm] = useState(false);
 	const [editingCompany, setEditingCompany] = useState(null);
 	const [editingDriver, setEditingDriver] = useState(null);
 	const [loading, setLoading] = useState(false);
+	const [processingRequest, setProcessingRequest] = useState(null);
+	const [showRejectModal, setShowRejectModal] = useState(null);
+	const [rejectNotes, setRejectNotes] = useState('');
+	
+	// Tracking de ubicaciones de repartidores
+	const { locations, loading: locationsLoading, error: locationsError } = useDriverLocations();
 
 	// Formulario de empresa
 	const [companyForm, setCompanyForm] = useState({
@@ -38,7 +59,21 @@ export function Dashboard({ admin, onLogout }) {
 	useEffect(() => {
 		loadCompanies();
 		loadDrivers();
+		loadRequests();
 	}, []);
+
+	const loadRequests = async () => {
+		try {
+			const [companyReqs, driverReqs] = await Promise.all([
+				loadCompanyRegistrationRequests(),
+				loadDriverRegistrationRequests(),
+			]);
+			setCompanyRequests(companyReqs);
+			setDriverRequests(driverReqs);
+		} catch (err) {
+			console.error('Error cargando solicitudes:', err);
+		}
+	};
 
 	const loadCompanies = async () => {
 		try {
@@ -73,6 +108,14 @@ export function Dashboard({ admin, onLogout }) {
 		setLoading(true);
 
 		try {
+			// Validar contraseña si se proporciona
+			if (companyForm.password && companyForm.password.trim()) {
+				if (companyForm.password.length < 6) {
+					setLoading(false);
+					return;
+				}
+			}
+
 			if (editingCompany) {
 				// Actualizar empresa existente
 				const { data: companyData, error: companyError } = await supabase
@@ -95,7 +138,10 @@ export function Dashboard({ admin, onLogout }) {
 				if (companyForm.username || companyForm.password) {
 					const updateData = {};
 					if (companyForm.username) updateData.username = companyForm.username;
-					if (companyForm.password) updateData.password = companyForm.password;
+					if (companyForm.password && companyForm.password.trim()) {
+						// Hashear contraseña antes de guardar
+						updateData.password = await hashPassword(companyForm.password);
+					}
 
 					const { error: userError } = await supabase
 						.from('company_users')
@@ -132,12 +178,15 @@ export function Dashboard({ admin, onLogout }) {
 
 				// Crear el usuario empresarial para acceder a la app
 				if (companyForm.username && companyForm.password) {
+					// Hashear contraseña antes de guardar
+					const hashedPassword = await hashPassword(companyForm.password);
+					
 					const { data: userData, error: userError } = await supabase
 						.from('company_users')
 						.insert({
 							company_id: companyData.id,
 							username: companyForm.username,
-							password: companyForm.password,
+							password: hashedPassword,
 							role: 'empresarial',
 							name: companyForm.name,
 						})
@@ -170,7 +219,7 @@ export function Dashboard({ admin, onLogout }) {
 			});
 			setShowCompanyForm(false);
 		} catch (err) {
-			alert('Error al ' + (editingCompany ? 'actualizar' : 'crear') + ' empresa: ' + err.message);
+			console.error('Error al ' + (editingCompany ? 'actualizar' : 'crear') + ' empresa: ' + err.message);
 		} finally {
 			setLoading(false);
 		}
@@ -181,18 +230,69 @@ export function Dashboard({ admin, onLogout }) {
 		setLoading(true);
 
 		try {
+			// Validar contraseña
+			if (!editingDriver && (!driverForm.password || !driverForm.password.trim())) {
+				showError('La contraseña es requerida');
+				setLoading(false);
+				return;
+			}
+			if (driverForm.password && driverForm.password.trim()) {
+				if (driverForm.password.length < 6) {
+					showError('La contraseña debe tener al menos 6 caracteres');
+					setLoading(false);
+					return;
+				}
+			}
+
+			// Validar teléfono chileno
+			if (!validateChileanPhone(driverForm.phone)) {
+				showError('El teléfono debe ser un número móvil chileno (ej: +56912345678 o 912345678).');
+				setLoading(false);
+				return;
+			}
+
+			// Validar email si se proporciona
+			if (driverForm.email && driverForm.email.trim() && !validateEmail(driverForm.email)) {
+				showError('El email ingresado no es válido.');
+				setLoading(false);
+				return;
+			}
+
+			// Verificar duplicados
+			const phoneCheck = await checkPhoneExistsInDrivers(driverForm.phone, editingDriver?.id);
+			if (phoneCheck.exists) {
+				showError(phoneCheck.message);
+				setLoading(false);
+				return;
+			}
+
+			if (driverForm.email && driverForm.email.trim()) {
+				const emailCheck = await checkEmailExistsInDrivers(driverForm.email, editingDriver?.id);
+				if (emailCheck.exists) {
+					showError(emailCheck.message);
+					setLoading(false);
+					return;
+				}
+			}
+
 			if (editingDriver) {
 				// Actualizar repartidor existente
+				const updateData = {
+					username: driverForm.username,
+					name: driverForm.name,
+					phone: driverForm.phone,
+					email: driverForm.email || null,
+					company_id: driverForm.company_id || null,
+				};
+
+				// Solo actualizar password si se proporcionó una nueva
+				if (driverForm.password && driverForm.password.trim()) {
+					updateData.password = await hashPassword(driverForm.password);
+				}
+
 				const { data, error } = await supabase
 					.from('drivers')
-					.update({
-						username: driverForm.username,
-						password: driverForm.password,
-						name: driverForm.name,
-						phone: driverForm.phone,
-						email: driverForm.email || null,
-						company_id: driverForm.company_id || null,
-					})
+					.update(updateData)
 					.eq('id', editingDriver.id)
 					.select()
 					.single();
@@ -207,11 +307,14 @@ export function Dashboard({ admin, onLogout }) {
 				setEditingDriver(null);
 			} else {
 				// Crear nuevo repartidor
+				// Hashear contraseña antes de guardar
+				const hashedPassword = await hashPassword(driverForm.password);
+				
 				const { data, error } = await supabase
 					.from('drivers')
 					.insert({
 						username: driverForm.username,
-						password: driverForm.password,
+						password: hashedPassword,
 						name: driverForm.name,
 						phone: driverForm.phone,
 						email: driverForm.email || null,
@@ -241,7 +344,7 @@ export function Dashboard({ admin, onLogout }) {
 			setShowDriverForm(false);
 		} catch (err) {
 			console.error('Error completo:', err);
-			alert('Error al ' + (editingDriver ? 'actualizar' : 'crear') + ' repartidor: ' + err.message);
+			showError('Error al ' + (editingDriver ? 'actualizar' : 'crear') + ' repartidor: ' + err.message);
 		} finally {
 			setLoading(false);
 		}
@@ -300,6 +403,144 @@ export function Dashboard({ admin, onLogout }) {
 		});
 	};
 
+	const handleDeleteCompany = async (companyId) => {
+		if (!confirm('¿Estás seguro de que deseas eliminar esta empresa? Esta acción no se puede deshacer.')) {
+			return;
+		}
+
+		setLoading(true);
+		try {
+			// Primero eliminar los usuarios asociados
+			const { error: usersError } = await supabase
+				.from('company_users')
+				.delete()
+				.eq('company_id', companyId);
+
+			if (usersError) {
+				console.error('Error eliminando usuarios:', usersError);
+				throw usersError;
+			}
+
+			// Luego eliminar la empresa
+			const { error: companyError } = await supabase
+				.from('companies')
+				.delete()
+				.eq('id', companyId);
+
+			if (companyError) {
+				console.error('Error eliminando empresa:', companyError);
+				throw companyError;
+			}
+
+			showSuccess('Empresa eliminada exitosamente');
+			await loadCompanies();
+		} catch (err) {
+			console.error('Error eliminando empresa:', err);
+			showError('Error al eliminar empresa: ' + err.message);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleDeleteDriver = async (driverId) => {
+		if (!confirm('¿Estás seguro de que deseas eliminar este repartidor? Esta acción no se puede deshacer.')) {
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const { error: driverError } = await supabase
+				.from('drivers')
+				.delete()
+				.eq('id', driverId);
+
+			if (driverError) {
+				console.error('Error eliminando repartidor:', driverError);
+				throw driverError;
+			}
+
+			showSuccess('Repartidor eliminado exitosamente');
+			await loadDrivers();
+		} catch (err) {
+			console.error('Error eliminando repartidor:', err);
+			showError('Error al eliminar repartidor: ' + err.message);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleApproveCompanyRequest = async (requestId) => {
+		if (!confirm('¿Estás seguro de aprobar esta solicitud de empresa?')) return;
+
+		setProcessingRequest(requestId);
+		try {
+			await approveCompanyRequest(requestId, admin.id);
+			showSuccess('Solicitud aprobada exitosamente');
+			await loadRequests();
+			await loadCompanies(); // Recargar empresas
+		} catch (err) {
+			showError('Error al aprobar solicitud: ' + err.message);
+		} finally {
+			setProcessingRequest(null);
+		}
+	};
+
+	const handleRejectCompanyRequest = async (requestId) => {
+		if (!rejectNotes.trim()) {
+			showWarning('Por favor ingresa un motivo de rechazo');
+			return;
+		}
+
+		setProcessingRequest(requestId);
+		try {
+			await rejectCompanyRequest(requestId, admin.id, rejectNotes);
+			showSuccess('Solicitud rechazada');
+			setShowRejectModal(null);
+			setRejectNotes('');
+			await loadRequests();
+		} catch (err) {
+			showError('Error al rechazar solicitud: ' + err.message);
+		} finally {
+			setProcessingRequest(null);
+		}
+	};
+
+	const handleApproveDriverRequest = async (requestId) => {
+		if (!confirm('¿Estás seguro de aprobar esta solicitud de repartidor?')) return;
+
+		setProcessingRequest(requestId);
+		try {
+			await approveDriverRequest(requestId, admin.id);
+			showSuccess('Solicitud aprobada exitosamente');
+			await loadRequests();
+			await loadDrivers(); // Recargar repartidores
+		} catch (err) {
+			showError('Error al aprobar solicitud: ' + err.message);
+		} finally {
+			setProcessingRequest(null);
+		}
+	};
+
+	const handleRejectDriverRequest = async (requestId) => {
+		if (!rejectNotes.trim()) {
+			showWarning('Por favor ingresa un motivo de rechazo');
+			return;
+		}
+
+		setProcessingRequest(requestId);
+		try {
+			await rejectDriverRequest(requestId, admin.id, rejectNotes);
+			showSuccess('Solicitud rechazada');
+			setShowRejectModal(null);
+			setRejectNotes('');
+			await loadRequests();
+		} catch (err) {
+			showError('Error al rechazar solicitud: ' + err.message);
+		} finally {
+			setProcessingRequest(null);
+		}
+	};
+
 	return (
 		<div className="admin-dashboard">
 			<header className="admin-dashboard-header">
@@ -315,6 +556,18 @@ export function Dashboard({ admin, onLogout }) {
 
 			<div className="admin-dashboard-tabs">
 				<button
+					className={activeTab === 'requests' ? 'active' : ''}
+					onClick={() => setActiveTab('requests')}
+				>
+					<FileText />
+					Solicitudes
+					{(companyRequests.length > 0 || driverRequests.length > 0) && (
+						<span className="admin-tab-badge">
+							{companyRequests.length + driverRequests.length}
+						</span>
+					)}
+				</button>
+				<button
 					className={activeTab === 'companies' ? 'active' : ''}
 					onClick={() => setActiveTab('companies')}
 				>
@@ -328,9 +581,206 @@ export function Dashboard({ admin, onLogout }) {
 					<UserPlus />
 					Repartidores
 				</button>
+				<button
+					className={activeTab === 'tracking' ? 'active' : ''}
+					onClick={() => setActiveTab('tracking')}
+				>
+					<MapPin />
+					Tracking
+					{locations.length > 0 && (
+						<span className="admin-tab-badge">
+							{locations.length}
+						</span>
+					)}
+				</button>
 			</div>
 
 			<div className="admin-dashboard-content">
+				{activeTab === 'requests' && (
+					<div className="admin-section">
+						<h2>Solicitudes de Registro</h2>
+
+						{/* Solicitudes de Empresas */}
+						<div style={{ marginBottom: '2rem' }}>
+							<h3 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
+								Solicitudes de Empresas ({companyRequests.length})
+							</h3>
+							{companyRequests.length === 0 ? (
+								<p className="admin-empty">No hay solicitudes de empresas pendientes</p>
+							) : (
+								<div className="admin-list">
+									{companyRequests.map((request) => (
+										<div key={request.id} className="admin-card">
+											<div style={{ flex: 1 }}>
+												<h3>{request.company_name}</h3>
+												<p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
+													<strong>Usuario:</strong> {request.username} • <strong>Nombre:</strong> {request.name}
+												</p>
+												{request.email && (
+													<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+														<strong>Email:</strong> {request.email}
+													</p>
+												)}
+												{request.phone && (
+													<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+														<strong>Teléfono:</strong> {request.phone}
+													</p>
+												)}
+												<p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+													Solicitado: {new Date(request.created_at).toLocaleDateString('es-ES', {
+														year: 'numeric',
+														month: 'long',
+														day: 'numeric',
+														hour: '2-digit',
+														minute: '2-digit',
+													})}
+												</p>
+											</div>
+											<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+												<button
+													onClick={() => handleApproveCompanyRequest(request.id)}
+													className="admin-approve-button"
+													disabled={processingRequest === request.id}
+													title="Aprobar solicitud"
+												>
+													<CheckCircle size={18} />
+													Aprobar
+												</button>
+												<button
+													onClick={() => setShowRejectModal({ type: 'company', id: request.id })}
+													className="admin-reject-button"
+													disabled={processingRequest === request.id}
+													title="Rechazar solicitud"
+												>
+													<XCircle size={18} />
+													Rechazar
+												</button>
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+
+						{/* Solicitudes de Repartidores */}
+						<div>
+							<h3 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
+								Solicitudes de Repartidores ({driverRequests.length})
+							</h3>
+							{driverRequests.length === 0 ? (
+								<p className="admin-empty">No hay solicitudes de repartidores pendientes</p>
+							) : (
+								<div className="admin-list">
+									{driverRequests.map((request) => (
+										<div key={request.id} className="admin-card">
+											<div style={{ flex: 1 }}>
+												<h3>{request.name}</h3>
+												<p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
+													<strong>Usuario:</strong> {request.username} • <strong>RUT:</strong> {request.document_id}
+												</p>
+												<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+													<strong>Teléfono:</strong> {request.phone}
+													{request.email && ` • <strong>Email:</strong> ${request.email}`}
+												</p>
+												<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+													<strong>Vehículo:</strong> {request.vehicle_type}
+													{request.vehicle_brand && ` • ${request.vehicle_brand}`}
+													{request.vehicle_model && ` ${request.vehicle_model}`}
+												</p>
+												<p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+													Solicitado: {new Date(request.created_at).toLocaleDateString('es-ES', {
+														year: 'numeric',
+														month: 'long',
+														day: 'numeric',
+														hour: '2-digit',
+														minute: '2-digit',
+													})}
+												</p>
+											</div>
+											<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+												<button
+													onClick={() => handleApproveDriverRequest(request.id)}
+													className="admin-approve-button"
+													disabled={processingRequest === request.id}
+													title="Aprobar solicitud"
+												>
+													<CheckCircle size={18} />
+													Aprobar
+												</button>
+												<button
+													onClick={() => setShowRejectModal({ type: 'driver', id: request.id })}
+													className="admin-reject-button"
+													disabled={processingRequest === request.id}
+													title="Rechazar solicitud"
+												>
+													<XCircle size={18} />
+													Rechazar
+												</button>
+											</div>
+										</div>
+									))}
+								</div>
+							)}
+						</div>
+
+						{/* Modal de Rechazo */}
+						{showRejectModal && (
+							<div className="admin-modal-overlay" onClick={() => {
+								setShowRejectModal(null);
+								setRejectNotes('');
+							}}>
+								<div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+									<div className="admin-modal-header">
+										<h3>Rechazar Solicitud</h3>
+										<button onClick={() => {
+											setShowRejectModal(null);
+											setRejectNotes('');
+										}}>
+											<X />
+										</button>
+									</div>
+									<div className="admin-form">
+										<div className="admin-form-field">
+											<label>Motivo del rechazo *</label>
+											<textarea
+												value={rejectNotes}
+												onChange={(e) => setRejectNotes(e.target.value)}
+												placeholder="Ingresa el motivo por el cual se rechaza esta solicitud..."
+												rows="4"
+												required
+											/>
+										</div>
+										<div className="admin-form-actions">
+											<button
+												type="button"
+												onClick={() => {
+													setShowRejectModal(null);
+													setRejectNotes('');
+												}}
+											>
+												Cancelar
+											</button>
+											<button
+												type="button"
+												onClick={() => {
+													if (showRejectModal.type === 'company') {
+														handleRejectCompanyRequest(showRejectModal.id);
+													} else {
+														handleRejectDriverRequest(showRejectModal.id);
+													}
+												}}
+												disabled={!rejectNotes.trim() || processingRequest}
+											>
+												{processingRequest ? 'Rechazando...' : 'Rechazar Solicitud'}
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						)}
+					</div>
+				)}
+
 				{activeTab === 'companies' && (
 					<div className="admin-section">
 						<div className="admin-section-header">
@@ -497,6 +947,14 @@ export function Dashboard({ admin, onLogout }) {
 											>
 												<Edit2 size={16} />
 											</button>
+											<button
+												onClick={() => handleDeleteCompany(company.id)}
+												className="admin-delete-button"
+												title="Eliminar empresa"
+												disabled={loading}
+											>
+												<Trash2 size={16} />
+											</button>
 										</div>
 									</div>
 								))
@@ -632,11 +1090,106 @@ export function Dashboard({ admin, onLogout }) {
 											>
 												<Edit2 size={16} />
 											</button>
+											<button
+												onClick={() => handleDeleteDriver(driver.id)}
+												className="admin-delete-button"
+												title="Eliminar repartidor"
+												disabled={loading}
+											>
+												<Trash2 size={16} />
+											</button>
 										</div>
 									</div>
 								))
 							)}
 						</div>
+					</div>
+				)}
+
+				{activeTab === 'tracking' && (
+					<div className="admin-section">
+						<h2>Tracking de Repartidores</h2>
+						<p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+							Ubicaciones en tiempo real de todos los repartidores activos
+						</p>
+
+						{locationsLoading ? (
+							<p className="admin-empty">Cargando ubicaciones...</p>
+						) : locationsError ? (
+							<p className="admin-empty" style={{ color: '#ef4444' }}>
+								Error al cargar ubicaciones: {locationsError}
+							</p>
+						) : locations.length === 0 ? (
+							<p className="admin-empty">No hay repartidores con ubicación disponible</p>
+						) : (
+							<div className="admin-list">
+								{locations.map((location) => {
+									const driver = location.drivers;
+									if (!driver) return null;
+
+									const lastUpdate = new Date(location.updated_at);
+									const minutesAgo = Math.floor((Date.now() - lastUpdate.getTime()) / 60000);
+									const isRecent = minutesAgo < 5;
+
+									return (
+										<div key={location.driver_id} className="admin-card">
+											<div style={{ flex: 1 }}>
+												<h3>{driver.name}</h3>
+												<p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
+													<strong>Usuario:</strong> {driver.username} • <strong>Teléfono:</strong> {driver.phone}
+												</p>
+												{driver.companies && (
+													<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
+														<strong>Empresa:</strong> {driver.companies.name}
+													</p>
+												)}
+												<div style={{ marginTop: '0.75rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+													<div>
+														<p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+															<strong>Ubicación:</strong> {location.latitude?.toFixed(6)}, {location.longitude?.toFixed(6)}
+														</p>
+														<p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+															<strong>Última actualización:</strong>{' '}
+															<span style={{ color: isRecent ? '#10b981' : '#f59e0b' }}>
+																{minutesAgo === 0 ? 'Hace menos de un minuto' : 
+																 minutesAgo === 1 ? 'Hace 1 minuto' : 
+																 `Hace ${minutesAgo} minutos`}
+															</span>
+														</p>
+													</div>
+													{location.latitude && location.longitude && (
+														<a
+															href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
+															target="_blank"
+															rel="noopener noreferrer"
+															style={{
+																padding: '0.5rem 1rem',
+																backgroundColor: '#3b82f6',
+																color: 'white',
+																borderRadius: '0.375rem',
+																textDecoration: 'none',
+																fontSize: '0.875rem',
+																display: 'inline-flex',
+																alignItems: 'center',
+																gap: '0.5rem',
+															}}
+														>
+															<MapPin size={16} />
+															Ver en Mapa
+														</a>
+													)}
+												</div>
+											</div>
+											<div style={{ display: 'flex', alignItems: 'center' }}>
+												<span className={driver.active ? 'status-active' : 'status-inactive'}>
+													{driver.active ? 'Activo' : 'Inactivo'}
+												</span>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						)}
 					</div>
 				)}
 			</div>

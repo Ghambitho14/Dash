@@ -8,12 +8,13 @@ Este documento describe la arquitectura completa del sistema de delivery, incluy
 
 ```
 App/
-├── src/                          # DeliveryApp (App Empresarial) - Solo Web
-├── Paneladmin/                   # Panel Admin - Solo Web
-├── App Repartidor/               # App Repartidor - Web + APK Android
-├── Database/                     # Scripts SQL y documentación de BD
-├── server.js                     # Servidor Express unificado
-└── package.json                  # Configuración principal
+├── Panelempresa/                  # DeliveryApp (App Empresarial) - Solo Web
+│   └── src/                       # Código fuente
+├── Paneladmin/                    # Panel Admin - Solo Web
+├── PanelRepartidor/               # App Repartidor - Web + APK Android
+├── Database/                      # Scripts SQL y documentación de BD
+├── CHECKLIST_PRODUCCION.md        # Checklist para producción
+└── package.json                   # Configuración principal (si existe)
 ```
 
 ---
@@ -21,7 +22,7 @@ App/
 ## Aplicaciones del Sistema
 
 ### 1. **DeliveryApp (App Empresarial)**
-**Ubicación**: `src/`  
+**Ubicación**: `Panelempresa/src/`  
 **Tipo**: Aplicación Web (React + Vite)  
 **Plataforma**: Solo Web (NO compila como APK)  
 **Puerto Desarrollo**: 5173 (por defecto)
@@ -125,7 +126,7 @@ Panel de administración para superadministradores. Permite crear empresas, repa
 ---
 
 ### 3. **App Repartidor**
-**Ubicación**: `App Repartidor/`  
+**Ubicación**: `PanelRepartidor/`  
 **Tipo**: Aplicación Híbrida (React + Capacitor)  
 **Plataforma**: Web + APK Android  
 **Puerto Desarrollo**: 5175 (o siguiente disponible)
@@ -159,10 +160,23 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 - **`Modal.jsx`**: Componente modal reutilizable
 
 #### Funcionalidades Especiales
+- **Supabase Realtime**: Escucha cambios en tiempo real en la tabla `orders` (implementado)
 - **Timeout automático**: Pedidos "Asignado" se revierten a "Pendiente" si no se actualizan en 1 minuto
-- **Recarga periódica**: Pedidos se recargan automáticamente cada 30 segundos
+- **Recarga periódica**: Fallback de 60 segundos si Realtime falla (polling de 1 segundo como redundancia)
 - **Historial de estados**: Cada cambio se registra en `order_status_history`
 - **Vista de completados**: Los repartidores pueden ver sus pedidos entregados
+- **Máquina de estados**: Validación de transiciones de estado mediante `orderStateMachine.jsx`
+
+#### ⚠️ Funcionalidades Deshabilitadas Temporalmente
+- **Botón Flotante (Floating Bubble)**: 
+  - **Estado**: Deshabilitado temporalmente
+  - **Ubicación**: `PanelRepartidor/android/app/src/main/java/com/deliveryapp/repartidor/FloatingBubbleService.java`
+  - **Razón**: Requiere ajustes en la sincronización de datos del driver y configuración de Supabase entre el servicio nativo y el WebView
+  - **TODO**: 
+    - Re-habilitar el servicio en `MainActivity.java` (métodos `checkOverlayPermission()` y `startFloatingBubbleService()`)
+    - Asegurar que la sincronización de datos del driver funcione correctamente
+    - Verificar que la configuración de Supabase esté disponible en el WebView del servicio
+    - Probar que el modal muestre correctamente los pedidos activos
 
 #### Compilación APK
 - **Configuración**: `capacitor.config.json`
@@ -220,11 +234,12 @@ Aplicación móvil para repartidores. Permite aceptar pedidos, actualizar estado
 2. Hook `useCreateOrderForm` valida datos y genera código de retiro único (6 dígitos)
 3. Servicio `orderService.createOrder` guarda pedido en `orders` con estado "Pendiente"
 4. Hook actualiza estado local y notifica éxito
-5. App Repartidor recibe el pedido en tiempo real (Supabase Realtime)
-6. Repartidor acepta → Estado cambia a "Asignado"
-7. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
-8. Repartidor ingresa código → Estado cambia a "Producto retirado"
-9. Repartidor entrega → Estado cambia a "Entregado"
+5. **App Repartidor recibe el pedido en tiempo real** (Supabase Realtime - implementado)
+6. **DeliveryApp actualiza pedidos** (polling cada 2 segundos - se recomienda implementar Realtime)
+7. Repartidor acepta → Estado cambia a "Asignado" (validado por máquina de estados)
+8. Repartidor marca "En camino" → Estado cambia a "En camino al retiro"
+9. Repartidor ingresa código → Estado cambia a "Producto retirado" (código validado)
+10. Repartidor entrega → Estado cambia a "Entregado"
 
 ### Flujo de Autenticación
 
@@ -365,10 +380,16 @@ npm run start:prod     # Compila y inicia servidor
 - Validación de usuarios activos (`active = true`)
 - Sesiones guardadas en `localStorage`
 
+**⚠️ IMPORTANTE - Seguridad de Contraseñas**:
+- Actualmente las contraseñas se almacenan en texto plano en la base de datos
+- **Se recomienda implementar hashing de contraseñas (bcrypt) antes de producción**
+- Ver `CHECKLIST_PRODUCCION.md` para detalles sobre implementación de seguridad
+
 ### Código de Retiro
 - Código único de 6 dígitos por pedido
 - Generado al crear el pedido
 - Validado antes de cambiar estado a "Producto retirado"
+- Validación mediante máquina de estados (`orderStateMachine.jsx`)
 
 ---
 
@@ -376,6 +397,7 @@ npm run start:prod     # Compila y inicia servidor
 
 ### App Empresarial
 ```bash
+cd Panelempresa
 npm run build        # Compila para web
 npm run start        # Servidor de producción
 ```
@@ -388,7 +410,7 @@ npm run build        # Compila para web
 
 ### App Repartidor
 ```bash
-cd "App Repartidor"
+cd PanelRepartidor
 npm run build        # Compila para web
 build-apk.bat        # Compila y prepara para APK
 npm run cap:open:android  # Abre Android Studio
@@ -398,7 +420,7 @@ npm run cap:open:android  # Abre Android Studio
 
 ## Estructura de Archivos Detallada
 
-### App Empresarial (`src/`)
+### App Empresarial (`Panelempresa/src/`)
 ```
 src/
 ├── App.jsx                    # Componente raíz
@@ -450,9 +472,9 @@ src/
     └── utils.js
 ```
 
-### App Repartidor (`App Repartidor/src/`)
+### App Repartidor (`PanelRepartidor/src/`)
 ```
-App Repartidor/src/
+src/
 ├── App.jsx                    # Componente raíz
 ├── main.jsx                   # Punto de entrada
 ├── components/                # Componentes React
@@ -507,7 +529,10 @@ Componente → Hook → Service → Supabase
 - Estado gestionado con React Hooks (`useState`, `useEffect`, `useCallback`)
 - Hooks personalizados encapsulan lógica compleja
 - Datos persistentes en `localStorage`
-- Sincronización con Supabase en tiempo real
+- **Sincronización con Supabase**:
+  - **App Repartidor**: Implementa Supabase Realtime + fallback de 60s
+  - **DeliveryApp**: Usa polling cada 2 segundos (se recomienda implementar Realtime)
+  - Ver `CHECKLIST_PRODUCCION.md` para optimizaciones de performance
 
 ### Componentes
 - Componentes funcionales con Hooks
@@ -518,8 +543,9 @@ Componente → Hook → Service → Supabase
 ### Servicios
 - Funciones puras que manejan comunicación con Supabase
 - Formateo de datos entre formato BD y formato aplicación
-- Manejo centralizado de errores
+- Manejo de errores (actualmente inconsistente - ver `CHECKLIST_PRODUCCION.md`)
 - Reutilizables entre diferentes hooks y componentes
+- **Nota**: Algunos servicios usan `console.error` directamente - se recomienda centralizar logging
 
 ### Estilos
 - CSS Modules por componente
@@ -551,8 +577,47 @@ VITE_ANNON_KEY=tu_anon_key
 
 ---
 
+## Sincronización en Tiempo Real
+
+### App Repartidor
+- **Implementado**: Supabase Realtime para cambios en `orders`
+- Canal: `orders-company-{companyId}`
+- Fallback: Polling cada 60 segundos si Realtime falla
+- Polling adicional: Cada 1 segundo como redundancia (se recomienda optimizar)
+
+### DeliveryApp
+- **No implementado**: Actualmente usa polling cada 2 segundos
+- **Recomendación**: Implementar Supabase Realtime similar a App Repartidor
+- Ver `CHECKLIST_PRODUCCION.md` sección "Performance" para detalles
+
+---
+
+## Manejo de Errores
+
+### Estado Actual
+- Mezcla de `alert()`, `console.error()`, y `toast` (react-hot-toast)
+- Algunos errores solo se muestran en consola
+- No hay manejo centralizado de errores
+- No hay Error Boundaries de React
+
+### Archivos con Manejo de Errores
+- `Panelempresa/src/App.jsx`: Usa `toast` correctamente
+- `PanelRepartidor/src/components/DriverApp.jsx`: Usa `alert()`
+- `PanelRepartidor/src/App.jsx`: Usa `alert()`
+
+**Recomendación**: Estandarizar manejo de errores. Ver `CHECKLIST_PRODUCCION.md` sección "Código y Arquitectura".
+
+---
+
 ## Mejoras Futuras
 
+### Funcionalidades Deshabilitadas que Requieren Atención
+- [ ] **Botón Flotante (App Repartidor)**: Re-habilitar y arreglar el servicio de burbuja flotante
+  - Ver sección "Funcionalidades Deshabilitadas Temporalmente" en App Repartidor
+  - Archivos relacionados: `FloatingBubbleService.java`, `MainActivity.java`, `floating_orders_panel.html`
+  - Problemas conocidos: Sincronización de datos del driver y configuración de Supabase
+
+### Funcionalidades Nuevas
 - [ ] Notificaciones push para repartidores
 - [ ] Geolocalización real para asignación de pedidos
 - [ ] Sistema de calificaciones
@@ -561,15 +626,48 @@ VITE_ANNON_KEY=tu_anon_key
 - [ ] Exportación de reportes
 - [ ] Multi-idioma (i18n)
 
+### Técnicas (Ver `CHECKLIST_PRODUCCION.md` para detalles completos)
+- [ ] Implementar hashing de contraseñas (CRÍTICO)
+- [ ] Implementar Supabase Realtime en DeliveryApp
+- [ ] Optimizar componentes React (React.memo, useMemo)
+- [ ] Estandarizar manejo de errores
+- [ ] Eliminar console.logs de producción
+- [ ] Implementar Error Boundaries
+- [ ] Agregar validaciones robustas en formularios
+- [ ] Implementar testing (unitario, integración, E2E)
+- [ ] Migrar gradualmente a TypeScript
+
 ---
 
 ## Documentación Adicional
 
-- `README_COMPILACION.md`: Guía de compilación
-- `Database/README.md`: Documentación de base de datos
-- `User.md`: Información de usuarios
+- `AGENTS.MD`: Guía para agentes de IA trabajando en el proyecto
+- `Panelempresa/Database/README.md`: Documentación de base de datos
+- `Panelempresa/README.md`: Documentación general del proyecto
+- `PanelRepartidor/README.md`: Documentación de App Repartidor
+- `Paneladmin/README.md`: Documentación de Panel Admin
+- `CHECKLIST_PRODUCCION.md`: Checklist para producción
 
 ---
 
-**Última actualización**: 2024
+## Áreas de Mejora Conocidas
+
+### 🔴 Crítico
+1. **Seguridad de contraseñas**: Implementar hashing (bcrypt) antes de producción
+2. **Exposición de contraseñas**: Eliminar password de objetos de usuario retornados
+
+### 🟠 Alta Prioridad
+3. **Performance**: Implementar Supabase Realtime en DeliveryApp (actualmente usa polling cada 2s)
+4. **Optimización React**: Agregar memoización (React.memo, useMemo, useCallback)
+
+### 🟡 Media Prioridad
+5. **Manejo de errores**: Estandarizar (eliminar alert(), usar toast consistentemente)
+6. **Logging**: Eliminar console.logs de producción, crear logger condicional
+7. **Validaciones**: Agregar validaciones robustas en formularios
+
+**Ver `CHECKLIST_PRODUCCION.md` para análisis completo con ubicaciones exactas, soluciones y plan de acción detallado.**
+
+---
+
+**Última actualización**: Diciembre 2024
 
