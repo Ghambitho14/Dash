@@ -9,6 +9,9 @@ import { OrdersView } from './OrdersView';
 import { MyOrdersView } from './MyOrdersView';
 import { BottomNavigation } from './BottomNavigation';
 import { DriverHeader } from './DriverHeader';
+import { SupportChat } from '../support/SupportChat';
+import { Modal } from '../common/Modal';
+import { useUnreadSupportMessages } from '../../hooks/useUnreadSupportMessages';
 import { supabase } from '../../utils/supabase';
 import { getStorageObject } from '../../utils/storage';
 import { Package, MapPin, CheckCircle } from 'lucide-react';
@@ -30,11 +33,27 @@ export function DriverApp({
 	isOnline,
 	onOnlineChange,
 	onLogout,
-	driverName
+	driverName,
+	currentDriver
 }) {
 	const [activeTab, setActiveTab] = useState('available');
 	const [driverData, setDriverData] = useState(null);
 	const [showOrdersModal, setShowOrdersModal] = useState(false);
+	const [showSupport, setShowSupport] = useState(false);
+	
+	// Mensajes no leídos de soporte
+	const { unreadCount, clearUnreadCount } = useUnreadSupportMessages(currentDriver);
+	
+	// Debug: Log del contador
+	useEffect(() => {
+		console.log('🔔 Contador de mensajes no leídos (driver):', unreadCount);
+	}, [unreadCount]);
+
+	// Limpiar contador cuando se abre el chat
+	const handleOpenSupport = () => {
+		setShowSupport(true);
+		clearUnreadCount();
+	};
 
 	// Cargar información del driver desde storage (async)
 	useEffect(() => {
@@ -278,6 +297,8 @@ export function DriverApp({
 				driverName={finalDriverName}
 				hasActiveOrders={myOrders.length > 0}
 				onLogout={onLogout}
+				onSupportClick={handleOpenSupport}
+				unreadSupportCount={unreadCount}
 			/>
 
 			{/* Contenido principal */}
@@ -336,6 +357,7 @@ export function DriverApp({
 									onUpdateStatus={handleUpdateStatus}
 									selectedOrder={null}
 									onCloseOrder={undefined}
+									currentDriver={currentDriver}
 								/>
 							</>
 						)
@@ -456,6 +478,16 @@ export function DriverApp({
 					</>
 				)}
 			</AnimatePresence>
+
+			{/* Modal de Soporte */}
+			{showSupport && (
+				<Modal onClose={() => setShowSupport(false)}>
+					<SupportChat
+						currentDriver={currentDriver}
+						onClose={() => setShowSupport(false)}
+					/>
+				</Modal>
+			)}
 		</div>
 	);
 }

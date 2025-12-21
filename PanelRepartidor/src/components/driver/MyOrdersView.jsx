@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Navigation, Phone, MapPin, User as UserIcon, ExternalLink, Clock, Package } from 'lucide-react';
+import { Navigation, Phone, MapPin, User as UserIcon, ExternalLink, Clock, Package, MessageCircle } from 'lucide-react';
 import { formatPrice } from '../../utils/utils';
 import { PickupCodeModal } from '../orders/PickupCodeModal';
 import { getPrimaryAction, validateOrderForTransition } from '../orders/orderStateMachine.jsx';
+import { SupportChat } from '../support/SupportChat';
+import { Modal } from '../common/Modal';
 import toast from 'react-hot-toast';
 import '../../styles/Components/MyOrdersView.css';
 
@@ -13,10 +15,12 @@ export function MyOrdersView({
 	onSelectOrder,
 	onUpdateStatus,
 	selectedOrder,
-	onCloseOrder
+	onCloseOrder,
+	currentDriver
 }) {
 	const [timeRemaining, setTimeRemaining] = useState(null);
 	const [showPickupCodeModal, setShowPickupCodeModal] = useState(false);
+	const [showLocalSupport, setShowLocalSupport] = useState(false);
 	const activeOrder = orders.length > 0 ? orders[0] : null;
 	const action = activeOrder ? getPrimaryAction(activeOrder) : null;
 	const isAssigned = activeOrder?.status === 'Asignado';
@@ -250,6 +254,17 @@ export function MyOrdersView({
 							Llamar
 						</motion.button>
 					)}
+					{activeOrder.local_id && (
+						<motion.button
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+							onClick={() => setShowLocalSupport(true)}
+							className="my-orders-view-support-button"
+						>
+							<MessageCircle style={{width: '1.25rem', height: '1.25rem'}} />
+							Soporte Local
+						</motion.button>
+					)}
 				</div>
 
 				{isAssigned ? (
@@ -317,6 +332,19 @@ export function MyOrdersView({
 					💡 <strong>Consejo:</strong> Verifica el código de entrega con el cliente antes de marcar como completado.
 				</p>
 			</motion.div>
+
+			{/* Modal de Soporte con Local */}
+			{showLocalSupport && activeOrder && (
+				<Modal onClose={() => setShowLocalSupport(false)}>
+					<SupportChat
+						currentDriver={currentDriver}
+						localId={activeOrder.local_id || activeOrder._dbLocalId}
+						companyId={activeOrder.company_id || activeOrder._dbCompanyId}
+						localName={activeOrder.local}
+						onClose={() => setShowLocalSupport(false)}
+					/>
+				</Modal>
+			)}
 		</div>
 	);
 }

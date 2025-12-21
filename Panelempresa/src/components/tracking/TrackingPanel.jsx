@@ -13,13 +13,15 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 	const [selectedDriver, setSelectedDriver] = useState(null);
 	const [driverLocations, setDriverLocations] = useState(new Map()); // driverId -> location
 	const [sidebarOpen, setSidebarOpen] = useState(true);
-	const mapRef = useRef(null);
-	const mapInstanceRef = useRef(null);
-	const markersRef = useRef([]);
-	const subscriptionsRef = useRef([]);
-	const orderCoordsRef = useRef(new Map()); // Cache de coordenadas por pedido (order.id -> {pickup, delivery})
-	const addressCacheRef = useRef(new Map()); // Cache de direcciones geocodificadas (address -> {lat, lon})
-	const driverMarkersRef = useRef(new Map()); // driverId -> marker
+		const mapRef = useRef(null);
+		const mapInstanceRef = useRef(null);
+		const markersRef = useRef([]);
+		const subscriptionsRef = useRef([]);
+		const orderCoordsRef = useRef(new Map()); // Cache de coordenadas por pedido (order.id -> {pickup, delivery})
+		const addressCacheRef = useRef(new Map()); // Cache de direcciones geocodificadas (address -> {lat, lon})
+		const driverMarkersRef = useRef(new Map()); // driverId -> marker
+		const directionsServiceRef = useRef(null); // Servicio de direcciones de Google Maps
+		const directionsRenderersRef = useRef(new Map()); // orderId -> DirectionsRenderer (una ruta por pedido)
 
 	const apiKey = import.meta.env.VITE_API_KEY_MAPS;
 
@@ -78,9 +80,9 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 			return;
 		}
 
-		// Cargar script de Google Maps con loading=async
+		// Cargar script de Google Maps con loading=async (incluir directions para rutas)
 		const script = document.createElement('script');
-		script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+		script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,directions&loading=async`;
 		script.async = true;
 		script.defer = true;
 		script.onload = () => {
@@ -336,6 +338,11 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 						// Actualizar marcador solo si el mapa está listo
 						if (mapInstanceRef.current && window.google) {
 							updateDriverMarker(order.driverId, updatedLocation, order);
+							// Actualizar ruta cuando cambia la ubicación del repartidor
+							const coords = orderCoordsRef.current.get(order.id);
+							if (coords) {
+								drawDriverRoute(order, updatedLocation, coords);
+							}
 						}
 					}
 				});
@@ -360,6 +367,11 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 							// Actualizar marcador solo si el mapa está listo
 							if (mapInstanceRef.current && window.google) {
 								updateDriverMarker(order.driverId, locationData, order);
+								// Dibujar ruta cuando se carga la ubicación
+								const coords = orderCoordsRef.current.get(order.id);
+								if (coords) {
+									drawDriverRoute(order, locationData, coords);
+								}
 							}
 						}
 					} catch (err) {
@@ -378,7 +390,7 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 		} catch (err) {
 			logger.error('Error cargando ubicación del repartidor:', err);
 		}
-	}, [onSelectOrder]);
+	}, [onSelectOrder, drawDriverRoute]);
 
 	// Cargar ubicaciones de repartidores cuando haya pedidos activos (incluso sin mapa)
 	useEffect(() => {
@@ -433,6 +445,9 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 						}
 					]
 				});
+				
+				// Inicializar Directions Service
+				directionsServiceRef.current = new google.maps.DirectionsService();
 				
 				logger.log('✅ Mapa creado exitosamente');
 			}
@@ -492,10 +507,10 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 				logger.log('⏳ Esperando coordenadas para ajustar mapa...');
 			}
 
-			// Limpiar solo marcadores de pedidos (pickup/delivery), NO los de repartidores
+			// Limpiar solo marcadores de pedidos (pickup/delivery), NO los de repartidores ni las rutas
 			markersRef.current.forEach(marker => marker.setMap(null));
 			markersRef.current = [];
-			// NO limpiar driverMarkersRef aquí, se mantienen y se actualizan cuando cambia la ubicación
+			// NO limpiar driverMarkersRef ni directionsRenderersRef aquí, se mantienen y se actualizan cuando cambia la ubicación
 
 			// Crear marcadores para cada pedido
 			activeOrders.forEach((order) => {
@@ -604,6 +619,14 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 						});
 						if (mapInstanceRef.current && window.google) {
 							updateDriverMarker(order.driverId, existingLocation, order);
+							// Dibujar ruta del repartidor
+							logger.log(`🗺️ Llamando drawDriverRoute para pedido ${order.id}`, {
+								status: order.status,
+								hasPickup: !!coords.pickup,
+								hasDelivery: !!coords.delivery,
+								hasDriverLocation: !!existingLocation
+							});
+							drawDriverRoute(order, existingLocation, coords);
 						}
 					} else {
 						// Si no tenemos la ubicación, cargarla (siempre, incluso sin mapa)
@@ -613,12 +636,166 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 						});
 						loadDriverLocation(order);
 					}
+				} else if (order.status === 'Producto retirado' && coords.pickup && coords.delivery) {
+					// Si el producto ya fue retirado, dibujar ruta de entrega aunque no haya ubicación del repartidor
+					logger.log(`🗺️ Llamando drawDriverRoute para pedido ${order.id} (Producto retirado)`, {
+						hasPickup: !!coords.pickup,
+						hasDelivery: !!coords.delivery
+					});
+					drawDriverRoute(order, null, coords);
 				}
 			});
 		}, 100);
 
 		return () => clearTimeout(timeoutId);
 	}, [loading, activeOrders, onSelectOrder, driverLocations]);
+
+	// Función para dibujar la ruta del repartidor
+	const drawDriverRoute = useCallback((order, driverLocation, coords) => {
+		logger.log(`🗺️ drawDriverRoute llamado para pedido ${order.id}`, {
+			hasMap: !!mapInstanceRef.current,
+			hasService: !!directionsServiceRef.current,
+			hasGoogle: !!window.google,
+			hasCoords: !!coords,
+			hasDriverLocation: !!driverLocation,
+			status: order.status,
+			coords: coords ? {
+				hasPickup: !!coords.pickup,
+				hasDelivery: !!coords.delivery,
+				pickup: coords.pickup,
+				delivery: coords.delivery
+			} : null
+		});
+
+		if (!mapInstanceRef.current || !directionsServiceRef.current || !window.google) {
+			logger.warn('No se puede dibujar ruta: mapa o servicio no disponible', {
+				hasMap: !!mapInstanceRef.current,
+				hasService: !!directionsServiceRef.current,
+				hasGoogle: !!window.google
+			});
+			return;
+		}
+
+		if (!coords) {
+			logger.warn(`No hay coordenadas para pedido ${order.id}`);
+			return;
+		}
+
+		const google = window.google;
+		const orderId = order.id;
+
+		// Limpiar rutas anteriores de este pedido
+		const keysToDelete = [];
+		directionsRenderersRef.current.forEach((renderer, key) => {
+			if (key.startsWith(`${orderId}_`)) {
+				if (renderer) renderer.setMap(null);
+				keysToDelete.push(key);
+			}
+		});
+		keysToDelete.forEach(key => directionsRenderersRef.current.delete(key));
+
+		// Dibujar rutas según el estado del pedido
+		if (order.status === 'Asignado' || order.status === 'En camino al retiro') {
+			// ETAPA 1: Ruta desde repartidor hasta el local (punto de retiro)
+			if (driverLocation && coords.pickup) {
+				const driverPos = {
+					lat: driverLocation.latitude,
+					lng: driverLocation.longitude
+				};
+
+				logger.log(`🗺️ Calculando ruta hacia local para pedido ${orderId}`, {
+					from: driverPos,
+					to: { lat: coords.pickup.lat, lng: coords.pickup.lon }
+				});
+
+				const pickupRenderer = new google.maps.DirectionsRenderer({
+					map: mapInstanceRef.current,
+					suppressMarkers: true, // Ya tenemos nuestros propios marcadores
+					polylineOptions: {
+						strokeColor: '#ef4444', // Rojo para ruta hacia el local
+						strokeWeight: 6,
+						strokeOpacity: 0.9
+					}
+				});
+
+				directionsServiceRef.current.route({
+					origin: driverPos,
+					destination: { lat: coords.pickup.lat, lng: coords.pickup.lon },
+					travelMode: google.maps.TravelMode.DRIVING
+				}, (result, status) => {
+					logger.log(`🗺️ Respuesta de DirectionsService para pedido ${orderId}:`, status);
+					if (status === 'OK' && pickupRenderer) {
+						pickupRenderer.setDirections(result);
+						directionsRenderersRef.current.set(`${orderId}_pickup`, pickupRenderer);
+						logger.log(`✅ Ruta hacia local dibujada para pedido ${orderId}`, {
+							renderer: pickupRenderer,
+							result: result
+						});
+					} else {
+						logger.warn(`❌ Error calculando ruta hacia local para pedido ${orderId}:`, status, {
+							result: result
+						});
+					}
+				});
+			} else {
+				logger.warn(`No se puede dibujar ruta hacia local: faltan datos`, {
+					hasDriverLocation: !!driverLocation,
+					hasPickup: !!coords.pickup,
+					orderId
+				});
+			}
+		} else if (order.status === 'Producto retirado') {
+			// ETAPA 2: Ruta desde el local hasta el punto de entrega
+			if (coords.pickup && coords.delivery) {
+				logger.log(`🗺️ Calculando ruta de entrega para pedido ${orderId}`, {
+					from: { lat: coords.pickup.lat, lng: coords.pickup.lon },
+					to: { lat: coords.delivery.lat, lng: coords.delivery.lon }
+				});
+
+				const deliveryRenderer = new google.maps.DirectionsRenderer({
+					map: mapInstanceRef.current,
+					suppressMarkers: true, // Ya tenemos nuestros propios marcadores
+					polylineOptions: {
+						strokeColor: '#10b981', // Verde para ruta de entrega
+						strokeWeight: 6,
+						strokeOpacity: 0.9
+					}
+				});
+
+				directionsServiceRef.current.route({
+					origin: { lat: coords.pickup.lat, lng: coords.pickup.lon },
+					destination: { lat: coords.delivery.lat, lng: coords.delivery.lon },
+					travelMode: google.maps.TravelMode.DRIVING
+				}, (result, status) => {
+					logger.log(`🗺️ Respuesta de DirectionsService para entrega pedido ${orderId}:`, status);
+					if (status === 'OK' && deliveryRenderer) {
+						deliveryRenderer.setDirections(result);
+						directionsRenderersRef.current.set(`${orderId}_delivery`, deliveryRenderer);
+						logger.log(`✅ Ruta de entrega dibujada para pedido ${orderId}`, {
+							renderer: deliveryRenderer,
+							result: result,
+							pickup: coords.pickup,
+							delivery: coords.delivery
+						});
+					} else {
+						logger.warn(`❌ Error calculando ruta de entrega para pedido ${orderId}:`, status, {
+							result: result,
+							pickup: coords.pickup,
+							delivery: coords.delivery
+						});
+					}
+				});
+			} else {
+				logger.warn(`No se puede dibujar ruta de entrega: faltan coordenadas`, {
+					hasPickup: !!coords.pickup,
+					hasDelivery: !!coords.delivery,
+					orderId
+				});
+			}
+		} else {
+			logger.log(`No se dibuja ruta para pedido ${orderId}: estado ${order.status} no requiere ruta`);
+		}
+	}, []);
 
 	// Centrar mapa en repartidor
 	const focusDriver = (driver) => {
@@ -656,6 +833,11 @@ export function TrackingPanel({ orders, onSelectOrder }) {
 				if (unsubscribe) unsubscribe();
 			});
 			markersRef.current.forEach(marker => marker.setMap(null));
+			// Limpiar todas las rutas
+			directionsRenderersRef.current.forEach(renderer => {
+				if (renderer) renderer.setMap(null);
+			});
+			directionsRenderersRef.current.clear();
 		};
 	}, []);
 

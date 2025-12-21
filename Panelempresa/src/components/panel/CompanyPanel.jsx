@@ -6,11 +6,14 @@ import { OrderDetail } from '../orders/OrderDetail';
 import { LocalSettings } from '../locals/LocalSettings';
 import { TrackingPanel } from '../tracking/TrackingPanel';
 import { AccountSettings } from '../settings/AccountSettings';
+import { SupportChat } from '../support/SupportChat';
 import { Modal } from '../ui/Modal';
 import { useCompanyPanel } from '../../hooks/useCompanyPanel';
+import { useUnreadSupportMessages } from '../../hooks/useUnreadSupportMessages';
 import { isAdminOrEmpresarial, getRoleName, getInitials } from '../../utils/utils';
-import { Package, Store, ChevronDown, Settings, Bell, LogOut, Search, Clock, Menu, X, Building2, Users, UserCog, Plus, Navigation, User } from 'lucide-react';
+import { Package, Store, ChevronDown, Settings, Bell, LogOut, Search, Clock, Menu, X, Building2, Users, UserCog, Plus, Navigation, User, MessageCircle } from 'lucide-react';
 import { logger } from '../../utils/logger';
+import { useEffect } from 'react';
 import '../../styles/Components/CompanyPanel.css';
 import '../../styles/Components/SettingsModal.css';
 
@@ -28,6 +31,7 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 		showLocalDropdown,
 		sidebarOpen,
 		showTrackingPanel,
+		showSupport,
 		userFilteredOrders,
 		filteredOrders,
 		locales,
@@ -43,14 +47,28 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 		setShowLocalDropdown,
 		setSidebarOpen,
 		setShowTrackingPanel,
+		setShowSupport,
 		handleCreateOrder,
 		handleDeleteOrder,
 		handleSaveLocalConfigs,
 	} = useCompanyPanel(currentUser, orders, setOrders, localConfigs, setLocalConfigs, onCreateOrder, onDeleteOrder, onSaveLocalConfigs);
 
+	const { unreadCount, clearUnreadCount } = useUnreadSupportMessages(currentUser);
+	
+	// Debug: Log del contador
+	useEffect(() => {
+		logger.log('🔔 Contador de mensajes no leídos:', unreadCount);
+	}, [unreadCount]);
+
 	const handleCreateOrderWrapper = (orderData) => handleCreateOrder(orderData, clients);
 	const handleDeleteOrderWrapper = handleDeleteOrder;
 	const handleSaveLocalConfigsWrapper = handleSaveLocalConfigs;
+
+	// Limpiar contador cuando se abre el chat
+	const handleOpenSupport = () => {
+		setShowSupport(true);
+		clearUnreadCount();
+	};
 
 	return (
 		<div className="panel-empresa">
@@ -137,6 +155,14 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 					
 					<button 
 						className="boton-encabezado-empresa" 
+						title="Soporte"
+						onClick={handleOpenSupport}
+					>
+						<MessageCircle />
+					</button>
+					
+					<button 
+						className="boton-encabezado-empresa boton-notificaciones" 
 						title="Notificaciones"
 						onClick={() => {
 							// TODO: Implementar notificaciones
@@ -144,6 +170,9 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 						}}
 					>
 						<Bell />
+						{unreadCount > 0 && (
+							<span className="badge-notificaciones">{unreadCount > 99 ? '99+' : unreadCount}</span>
+						)}
 					</button>
 					
 					{isAdminOrEmpresarial(currentUser.role) && (
@@ -488,6 +517,16 @@ export function CompanyPanel({ currentUser, orders, setOrders, onReloadOrders, l
 						currentUser={currentUser}
 						onClose={() => setShowAccountSettings(false)}
 						onUpdateUser={onUpdateCurrentUser}
+					/>
+				</Modal>
+			)}
+
+			{showSupport && (
+				<Modal onClose={() => setShowSupport(false)} maxWidth="md">
+					<SupportChat
+						currentUser={currentUser}
+						orders={orders}
+						onClose={() => setShowSupport(false)}
 					/>
 				</Modal>
 			)}

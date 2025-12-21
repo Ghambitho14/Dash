@@ -221,7 +221,7 @@
 
 .my-orders-view-active-order-actions {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 	gap: 1rem;
 	margin-bottom: 1.25rem;
 }
@@ -266,6 +266,27 @@
 .my-orders-view-call-button:hover {
 	background: linear-gradient(135deg, #059669 0%, #047857 100%);
 	box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.my-orders-view-support-button {
+	padding: 1rem;
+	background: linear-gradient(135deg, #667eea 0%, #8b5cf6 100%);
+	color: white;
+	border: none;
+	border-radius: 1.125rem;
+	font-size: 0.938rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.625rem;
+}
+
+.my-orders-view-support-button:hover {
+	background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+	box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .my-orders-view-en-camino-button {

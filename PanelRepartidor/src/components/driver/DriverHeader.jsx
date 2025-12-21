@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { Zap, LogOut } from 'lucide-react';
+import { Zap, LogOut, MessageCircle, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import '../../styles/Components/DriverHeader.css';
 
-export function DriverHeader({ isConnected, onToggleConnection, driverName, hasActiveOrders, onLogout }) {
+export function DriverHeader({ isConnected, onToggleConnection, driverName, hasActiveOrders, onLogout, onSupportClick, unreadSupportCount = 0 }) {
 	const handleToggleConnection = () => {
 		// Si intenta desconectarse y tiene pedidos activos, bloquear
 		if (isConnected && hasActiveOrders) {
@@ -52,6 +52,36 @@ export function DriverHeader({ isConnected, onToggleConnection, driverName, hasA
 								</div>
 								<span className="driver-header-status-text">Desconectado</span>
 							</div>
+						)}
+					</motion.button>
+
+					{/* Botón de soporte */}
+					{onSupportClick && (
+						<motion.button
+							onClick={onSupportClick}
+							className="driver-header-logout-button"
+							whileTap={{ scale: 0.95 }}
+							title="Soporte"
+							style={{ background: '#10b981', borderColor: '#10b981' }}
+						>
+							<MessageCircle className="driver-header-logout-icon" style={{ color: 'white' }} />
+						</motion.button>
+					)}
+
+					{/* Botón de notificaciones */}
+					<motion.button
+						className="driver-header-logout-button driver-notification-button"
+						whileTap={{ scale: 0.95 }}
+						title="Notificaciones"
+						style={{ background: '#f59e0b', borderColor: '#f59e0b', position: 'relative' }}
+						onClick={() => {
+							// TODO: Implementar notificaciones
+							console.log('Notificaciones');
+						}}
+					>
+						<Bell className="driver-header-logout-icon" style={{ color: 'white' }} />
+						{unreadSupportCount > 0 && (
+							<span className="driver-notification-badge">{unreadSupportCount > 99 ? '99+' : unreadSupportCount}</span>
 						)}
 					</motion.button>
 

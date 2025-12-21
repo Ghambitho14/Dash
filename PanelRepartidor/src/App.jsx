@@ -69,6 +69,8 @@ export default function App() {
 			_dbClientId: order.client_id,
 			_dbLocalId: order.local_id,
 			_dbUserId: order.user_id,
+			local_id: order.local_id,
+			company_id: order.company_id,
 		};
 	}, []);
 
@@ -387,6 +389,7 @@ export default function App() {
 			onOnlineChange={setIsOnline}
 			onLogout={handleLogout}
 			driverName={currentDriver.name}
+			currentDriver={currentDriver}
 		/>
 	);
 }

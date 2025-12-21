@@ -7,5 +7,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	throw new Error('Faltan las variables de entorno de Supabase');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Configurar cliente de Supabase con Realtime habilitado
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+	realtime: {
+		params: {
+			eventsPerSecond: 10
+		}
+	}
+});
 

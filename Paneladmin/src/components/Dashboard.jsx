@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, UserPlus, LogOut, Plus, X, Edit2, FileText, CheckCircle, XCircle, Trash2, MapPin } from 'lucide-react';
+import { Building2, UserPlus, LogOut, Plus, X, Edit2, FileText, CheckCircle, XCircle, Trash2, MapPin, MessageCircle, Bell } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { hashPassword } from '../utils/passwordUtils';
 import { validateRUT, validateChileanPhone, validateEmail, formatRUT, formatChileanPhone, checkRUTExistsInDrivers, checkEmailExistsInDrivers, checkPhoneExistsInDrivers } from '../utils/validationUtils';
@@ -13,6 +13,9 @@ import {
 } from '../services/registrationRequestsService';
 import { useDriverLocations } from '../hooks/useDriverLocations';
 import { useToast } from '../hooks/useToast';
+import { useUnreadSupportMessages } from '../hooks/useUnreadSupportMessages';
+import { AdminTrackingMap } from './AdminTrackingMap';
+import { SupportChat } from './SupportChat';
 import '../style/Dashboard.css';
 
 export function Dashboard({ admin, onLogout }) {
@@ -30,9 +33,24 @@ export function Dashboard({ admin, onLogout }) {
 	const [processingRequest, setProcessingRequest] = useState(null);
 	const [showRejectModal, setShowRejectModal] = useState(null);
 	const [rejectNotes, setRejectNotes] = useState('');
+	const [showSupport, setShowSupport] = useState(false);
 	
 	// Tracking de ubicaciones de repartidores
-	const { locations, loading: locationsLoading, error: locationsError } = useDriverLocations();
+	const { locations, loading: locationsLoading, error: locationsError, reload: reloadLocations } = useDriverLocations();
+	
+	// Mensajes no leídos de soporte
+	const { unreadCount, clearUnreadCount } = useUnreadSupportMessages(admin);
+	
+	// Debug: Log del contador
+	useEffect(() => {
+		console.log('🔔 Contador de mensajes no leídos (admin):', unreadCount);
+	}, [unreadCount]);
+
+	// Limpiar contador cuando se abre el chat
+	const handleOpenSupport = () => {
+		setShowSupport(true);
+		clearUnreadCount();
+	};
 
 	// Formulario de empresa
 	const [companyForm, setCompanyForm] = useState({
@@ -548,10 +566,35 @@ export function Dashboard({ admin, onLogout }) {
 					<h1>Panel de Administración</h1>
 					<p>Bienvenido, {admin.name}</p>
 				</div>
-				<button onClick={onLogout} className="admin-logout-button">
-					<LogOut />
-					Cerrar Sesión
-				</button>
+				<div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+					<button 
+						onClick={handleOpenSupport} 
+						className="admin-logout-button"
+						style={{ background: '#10b981' }}
+						title="Soporte"
+					>
+						<MessageCircle size={16} />
+						Soporte
+					</button>
+					<button 
+						className="admin-logout-button admin-notification-button"
+						style={{ background: '#f59e0b', position: 'relative' }}
+						title="Notificaciones"
+						onClick={() => {
+							// TODO: Implementar notificaciones
+							console.log('Notificaciones');
+						}}
+					>
+						<Bell size={16} />
+						{unreadCount > 0 && (
+							<span className="admin-notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+						)}
+					</button>
+					<button onClick={onLogout} className="admin-logout-button">
+						<LogOut />
+						Cerrar Sesión
+					</button>
+				</div>
 			</header>
 
 			<div className="admin-dashboard-tabs">
@@ -1108,91 +1151,77 @@ export function Dashboard({ admin, onLogout }) {
 
 				{activeTab === 'tracking' && (
 					<div className="admin-section">
-						<h2>Tracking de Repartidores</h2>
-						<p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
-							Ubicaciones en tiempo real de todos los repartidores activos
-						</p>
-
-						{locationsLoading ? (
-							<p className="admin-empty">Cargando ubicaciones...</p>
-						) : locationsError ? (
-							<p className="admin-empty" style={{ color: '#ef4444' }}>
-								Error al cargar ubicaciones: {locationsError}
-							</p>
-						) : locations.length === 0 ? (
-							<p className="admin-empty">No hay repartidores con ubicación disponible</p>
-						) : (
-							<div className="admin-list">
-								{locations.map((location) => {
-									const driver = location.drivers;
-									if (!driver) return null;
-
-									const lastUpdate = new Date(location.updated_at);
-									const minutesAgo = Math.floor((Date.now() - lastUpdate.getTime()) / 60000);
-									const isRecent = minutesAgo < 5;
-
-									return (
-										<div key={location.driver_id} className="admin-card">
-											<div style={{ flex: 1 }}>
-												<h3>{driver.name}</h3>
-												<p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
-													<strong>Usuario:</strong> {driver.username} • <strong>Teléfono:</strong> {driver.phone}
-												</p>
-												{driver.companies && (
-													<p style={{ marginTop: '0.25rem', color: '#6b7280' }}>
-														<strong>Empresa:</strong> {driver.companies.name}
-													</p>
-												)}
-												<div style={{ marginTop: '0.75rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-													<div>
-														<p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-															<strong>Ubicación:</strong> {location.latitude?.toFixed(6)}, {location.longitude?.toFixed(6)}
-														</p>
-														<p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
-															<strong>Última actualización:</strong>{' '}
-															<span style={{ color: isRecent ? '#10b981' : '#f59e0b' }}>
-																{minutesAgo === 0 ? 'Hace menos de un minuto' : 
-																 minutesAgo === 1 ? 'Hace 1 minuto' : 
-																 `Hace ${minutesAgo} minutos`}
-															</span>
-														</p>
-													</div>
-													{location.latitude && location.longitude && (
-														<a
-															href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
-															target="_blank"
-															rel="noopener noreferrer"
-															style={{
-																padding: '0.5rem 1rem',
-																backgroundColor: '#3b82f6',
-																color: 'white',
-																borderRadius: '0.375rem',
-																textDecoration: 'none',
-																fontSize: '0.875rem',
-																display: 'inline-flex',
-																alignItems: 'center',
-																gap: '0.5rem',
-															}}
-														>
-															<MapPin size={16} />
-															Ver en Mapa
-														</a>
-													)}
-												</div>
-											</div>
-											<div style={{ display: 'flex', alignItems: 'center' }}>
-												<span className={driver.active ? 'status-active' : 'status-inactive'}>
-													{driver.active ? 'Activo' : 'Inactivo'}
-												</span>
-											</div>
-										</div>
-									);
-								})}
+						<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+							<div>
+								<h2>Tracking de Repartidores</h2>
+								<p style={{ marginTop: '0.5rem', color: '#6b7280' }}>
+									Ubicaciones en tiempo real de todos los repartidores activos
+								</p>
 							</div>
-						)}
+							{locationsError && (
+								<button
+									onClick={() => reloadLocations()}
+									style={{
+										padding: '0.5rem 1rem',
+										backgroundColor: '#3b82f6',
+										color: 'white',
+										border: 'none',
+										borderRadius: '0.375rem',
+										cursor: 'pointer',
+										fontSize: '0.875rem',
+									}}
+								>
+									Reintentar
+								</button>
+							)}
+						</div>
+
+						<AdminTrackingMap 
+							locations={locations}
+							loading={locationsLoading}
+							error={locationsError}
+						/>
 					</div>
 				)}
 			</div>
+
+			{/* Modal de Soporte */}
+			{showSupport && (
+				<div 
+					style={{
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						background: 'rgba(0, 0, 0, 0.6)',
+						backdropFilter: 'blur(4px)',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						zIndex: 1000,
+						padding: '1rem',
+					}}
+					onClick={() => setShowSupport(false)}
+				>
+					<div 
+						style={{
+							background: 'white',
+							borderRadius: '1rem',
+							width: '100%',
+							maxWidth: '42rem',
+							maxHeight: '90vh',
+							overflow: 'hidden',
+						}}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<SupportChat
+							admin={admin}
+							onClose={() => setShowSupport(false)}
+						/>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
